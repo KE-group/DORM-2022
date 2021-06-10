@@ -28,44 +28,36 @@ plot_pie <- function(subDF, Title){
   names(sliceColors) <- pie_table$Gene
   
   library(ggplot2)
-  ggplot(pie_table,aes(x="",y=count,fill=reorder(Gene,-count)))+geom_bar(stat="identity", width=1, color=NA) + theme_void() + scale_fill_manual(values= sliceColors) + theme(legend.position="right",legend.text=element_text(family="serif",size = 8),title = element_text(family = "serif", size = 14, face = "bold.italic"),legend.key.size = unit(0.2, "lines")) + guides(fill = guide_legend(title = "Genes", title.position = "top", byrow = T, nrow = (threshold+1), title.theme = element_text(family="serif", size = 10, face = "italic", angle = 0))) + coord_polar(theta = "y",direction = -1)+ggtitle(paste0(gsub("_"," ",Title,fixed=T)," (n = ",prettyNum(sum(pie_table$count),big.mark = " ",scientific = F),")"))
+  ggplot(pie_table,aes(x="",y=count,fill=reorder(Gene,-count)))+geom_bar(stat="identity", width=1, color=NA) + theme_void() + scale_fill_manual(values= sliceColors) + theme(legend.position="right",legend.text=element_text(family="serif",size = 6),title = element_text(family = "serif", size = 7, face = "bold.italic"),legend.key.size = unit(0.2, "lines")) + guides(fill = guide_legend(title = "Genes", title.position = "top", byrow = T, nrow = 21, title.theme = element_text(family="serif", size = 6, face = "italic", angle = 0))) + coord_polar(theta = "y",direction = -1)+ggtitle(paste0(gsub("_"," ",Title,fixed=T)," (n = ",prettyNum(sum(pie_table$count),big.mark = " ",scientific = F),")"))
   
 }
 
-myplots <- lapply(X = c(3,5),FUN = function(i) plot_pie(subDF = na.omit(DF[,c(1,i)]), Title = colnames(DF)[i]))
+# lapply(X = c(3,5),FUN = function(i) plot_pie(subDF = na.omit(DF[,c(1,i)]), Title = colnames(DF)[i]))
 
-myplots <- lapply(X = c(3,5:ncol(DF)),FUN = function(i) plot_pie(subDF = na.omit(DF[,c(1,i)]), Title = colnames(DF)[i]))
-
-tmp <- gridExtra::grid.arrange(grobs=myplots, 
-                               nrow=3, 
-                               ncol=13)
-ggsave(filename = paste0("Pies_combined.svg"),plot = tmp,width = 20,height = 10)
+myplots <- parallel::mclapply(X = c(3,5:ncol(DF)),FUN = function(i) plot_pie(subDF = na.omit(DF[,c(1,i)]), Title = colnames(DF)[i]),mc.cores = parallel::detectCores())
 
 
+ggplot2::ggsave(filename = paste0("Pies_combined_1.pdf"),
+       plot = gridExtra::grid.arrange(grobs=myplots[1:16], 
+                                      nrow=4, 
+                                      ncol=4),
+       width = 14,
+       height = 12)
 
 
+ggplot2::ggsave(filename = paste0("Pies_combined_2.pdf"),
+       plot = gridExtra::grid.arrange(grobs=myplots[17:32], 
+                                      nrow=4, 
+                                      ncol=4),
+       width = 14,
+       height = 12)
 
 
+ggplot2::ggsave(filename = paste0("Pies_combined_3.pdf"),
+       plot = gridExtra::grid.arrange(grobs=myplots[33:39], 
+                                      nrow=4, 
+                                      ncol=4),
+       width = 14,
+       height = 12)
 
-pdf("pies.pdf",height = 5,width = 6,onefile = T)
 
-for(i in c(3,5:ncol(DF))){
-  # i <- 21
-
-  
-  
-  library(ggplot2)
-   pie_1 <- ggplot(pie_table[-21,],aes(x="",y=count,fill=reorder(Gene,-count)))+geom_bar(stat="identity", width=1, color="white") + theme_void() + scale_fill_manual(values= sliceColors) + theme(legend.position="none") + coord_polar(theta = "y",direction = -1)
-  
-  
-  
-  pie <- gridExtra::grid.arrange(pie_1,
-                           pie_2,
-                           ncol=2,
-                           nrow=1,
-                           widths = c(2, 5),
-                           top = grid::textGrob(label = paste0(gsub("_"," ",colnames(DF)[i],fixed=T)," (n = ",prettyNum(sum(pie_table$count),big.mark = " ",scientific = F),")"), gp = grid::gpar(fontsize=18, font=4, fontfamily="serif"),just = "right",y = -1))
-  
-  print(pie)
-  
-} ; dev.off()
