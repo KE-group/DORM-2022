@@ -6,9 +6,11 @@ muts$Mutation.AA <- stringi::stri_replace_all_regex(str = muts$Mutation.AA,patte
 muts$mutID <- paste(muts$Gene.name,muts$Mutation.AA,sep="=")
 
 dataDF <- muts[,c("Sample.name","mutID","Primary.site")]
-rm(muts)
+rm(muts); gc()
+# output <- plyr::count(dataDF,"mutID")
 
-output <- plyr::count(dataDF,"mutID")
+output <- as.data.frame(data.table::as.data.table(dataDF)[,.(.N), by = mutID])
+colnames(output)[2] <- "freq"
 singleOccurances <- output$mutID[which(output$freq==1)]
 rm(output)
 
