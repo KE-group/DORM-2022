@@ -18,7 +18,9 @@ rm(output)
 dataDF <- dataDF[dataDF$mutID %nin% singleOccurances,]
 rm("%nin%",singleOccurances)
 
-Stats <- data.frame(table(dataDF$Sample.name))
+
+# Stats <- data.frame(table(dataDF$Sample.name))
+Stats <- as.data.frame(data.table::as.data.table(dataDF)[,.(.N), by = Sample.name])
 colnames(Stats) <- c("Sample.name","count")
 
 Sample_Tissue_Map <- unique.data.frame(dataDF[,c("Sample.name","Primary.site")])
