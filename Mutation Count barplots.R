@@ -10,10 +10,10 @@ muts$mutID <- paste(muts$Gene.name,muts$Mutation.AA,sep="=")
 tmpdf <- muts[,c("mutID","Primary.site")]
 
 TissuesStats <- data.frame(table(tmpdf$Primary.site))
-colnames(TissuesStats) <- c("tissue","count")
+colnames(TissuesStats) <- c("tissue", "count")
 TissuesStats$tissue <- as.character(TissuesStats$tissue)
-TissuesStats$tissue <- gsub("_"," ",TissuesStats$tissue,fixed = T)
-TissuesStats <- TissuesStats[order(TissuesStats$count,decreasing = T),]
+TissuesStats$tissue <- gsub("_", " ", TissuesStats$tissue, fixed = T)
+TissuesStats <- TissuesStats[order(TissuesStats$count, decreasing = T), ]
 
 source('https://raw.githubusercontent.com/dchakro/ggplot_themes/master/DC_theme_generator.R')
 customtheme <- DC_theme_generator(type = 'L',
@@ -25,7 +25,14 @@ customtheme <- DC_theme_generator(type = 'L',
                                   fontsize.cex = 1.2,
                                   ax.fontstyle = "italic")
 options(scipen=100000)
-ggplot(data = TissuesStats,aes(y=count,x=reorder(tissue,-count)))+geom_col(fill="#000000",width=0.75)+customtheme+scale_y_continuous(expand = c(0,0))+xlab("Tissue of origin of cancer")+ylab("Number of mutations")
+ggplot(data = TissuesStats,aes(y=count,
+                               x=reorder(tissue,-count)))+
+  geom_col(fill="#000000",
+           width=0.75)+
+  customtheme+
+  scale_y_continuous(expand = c(0,0))+
+  xlab("Tissue of origin of cancer")+
+  ylab("Number of recurrent mutations")
 # ggsave("/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Hotspot Explorer/Data/Barplots/CodingMuts.svg",width = 8,height = 5)
 
 output <- plyr::count(tmpdf,"mutID")
@@ -80,5 +87,11 @@ customtheme <- DC_theme_generator(type = 'L',
                                   ax.fontstyle = "italic")
 
 options(scipen=100000)
-ggplot(data = TissuesStats,aes(y=count,x=reorder(tissue,-count)))+geom_col(fill="#000000",width=0.75)+customtheme+scale_y_continuous(expand = c(0,0))+xlab("Tissue of origin of cancer")+ylab("Number of mutations")
+ggplot(data = TissuesStats,aes(y=count,
+                               x=reorder(tissue,-count)))+
+  geom_col(fill="#000000",width=0.75)+
+  customtheme+
+  scale_y_continuous(expand = c(0,0))+
+  xlab("Tissue of origin of cancer")+
+  ylab("Recurrent mutations at\namino acid residues")
 # ggsave("/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Hotspot Explorer/Data/Barplots/Residues_recurrent.svg",width = 8,height = 5)
