@@ -50,12 +50,22 @@ customtheme <- DC_theme_generator(type = 'L',
                                   ax.fontstyle = "italic")
 options(scipen=100000)
 ggplot(data = Stats,aes(y=count,x=tissue))+geom_jitter(alpha=0.25,height = 0,size=1.5,width=0.3)+scale_y_continuous()+xlab("Tissue of origin of cancer")+ylab("Number of mutations\nper sample")+customtheme 
-ggsave("/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Hotspot Explorer/Data/Barplots/TMB.pdf",width = 8,height = 5,device = cairopdf)
+
+# ggsave(
+# "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Hotspot Explorer/Data/Barplots/TMB.pdf",
+# width = 8,
+# height = 5,
+# device = cairo_pdf
+# )
 
 
 # +stat_summary(fun=mean, geom="crossbar", color="red",alpha=0.5)
 
-# ggsave("/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Hotspot Explorer/Data/Barplots/TMB.svg",width = 8,height = 5)
+# ggsave(
+# "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Hotspot Explorer/Data/Barplots/TMB.svg",
+# width = 8,
+# height = 5
+# )
 
 
 

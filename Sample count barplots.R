@@ -47,10 +47,16 @@ ggplot(data = Stats,aes(y=count,
   xlab("Tissue of origin of cancer")+
   ylab("Number of samples")
 
-# ggsave("/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Hotspot Explorer/Data/Barplots/SampleCounts.svg",width = 8,height = 5)
+ggsave(
+  "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Hotspot Explorer/Data/Barplots/SampleCounts.pdf",
+  width = 8,
+  height = 5,
+  device = cairo_pdf
+)
 
 rm(tmpdf)
-output <- plyr::count(dataDF, "mutID")
+output <- as.data.frame(data.table::as.data.table(dataDF)[,.(.N), by = mutID])
+colnames(output)[2] <- "freq"
 singleOccurances <- output$mutID[which(output$freq == 1)]
 rm(output)
 
@@ -68,13 +74,18 @@ Stats <- Stats[order(Stats$count, decreasing = T), ]
 
 options(scipen=100000)
 
-ggplot(data = TissuesStats,
+ggplot(data = Stats,
        aes(y=count,
            x=reorder(tissue,-count)))+
   geom_col(fill="#000000",width=0.75)+
   customtheme+
   scale_y_continuous(expand = c(0,0))+
   xlab("Tissue of origin of cancer")+
-  ylab("Number of samples")
+  ylab("Number of samples\nwith recurrent mutations")
 
-# ggsave("/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Hotspot Explorer/Data/Barplots/SampleCounts_2.svg",width = 8,height = 5)
+ggsave(
+  "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Hotspot Explorer/Data/Barplots/SampleCounts_2.pdf",
+  width = 8,
+  height = 5,
+  device = cairo_pdf
+)
