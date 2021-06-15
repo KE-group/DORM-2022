@@ -32,11 +32,11 @@ plot_pie <- function(subDF, Title){
   names(sliceColors) <- pie_table$Gene
   
   library(ggplot2)
-  ggplot(pie_table,aes(x="",
+  pie <- ggplot(pie_table,aes(x="",
                        y=count,
                        fill=reorder(Gene,-count)))+
     geom_bar(stat="identity", 
-             width=1, 
+             width=1,  
              color=NA) + 
     theme_void() + 
     scale_fill_manual(values = sliceColors) + 
@@ -46,6 +46,7 @@ plot_pie <- function(subDF, Title){
           title = element_text(family = "serif", 
                                size = 7, 
                                face = "bold.italic"),
+          plot.title = element_text(hjust = 0.5),
           legend.key.size = unit(0.2, "lines")) + 
     guides(fill = guide_legend(title = "Genes", 
                                title.position = "top", 
@@ -60,11 +61,12 @@ plot_pie <- function(subDF, Title){
     ggtitle(paste0(gsub("_", " ", Title, fixed = T),
                    " (n = ",
                    prettyNum(
-                     sum(pie_table$count),
+                     sum(pie_table$count,na.rm = T),
                      big.mark = " ",
                      scientific = F
                    ),
                    ")"))
+  return(pie)
   
 }
 
@@ -74,36 +76,60 @@ plot_pie <- function(subDF, Title){
 #   plot_pie(subDF = na.omit(DF[, c(1, i)]), Title = colnames(DF)[i])
 # )
 
+# Alphabetical order
+# myplots <-
+#   parallel::mclapply(
+#     X = c(3, 5:ncol(DF)),
+#     FUN = function(i)
+#       plot_pie(subDF = na.omit(DF[, c(1, i)]), Title = colnames(DF)[i]),
+#     mc.cores = parallel::detectCores()
+#   )
+
+# Ordered by total number of mutations
+No_of_mutations <- colSums(DF[, c(5:ncol(DF))],na.rm = T)
+range(order(No_of_mutations,decreasing = T)+4)
+
 myplots <-
   parallel::mclapply(
-    X = c(3, 5:ncol(DF)),
+    X = c(3, (order(No_of_mutations, decreasing = T)+4)),
     FUN = function(i)
       plot_pie(subDF = na.omit(DF[, c(1, i)]), Title = colnames(DF)[i]),
     mc.cores = parallel::detectCores()
   )
 
+ggplot2::ggsave(
+  filename = "Plots_combined.pdf",
+  plot = gridExtra::marrangeGrob(myplots, 
+                                 nrow = 4, 
+                                 ncol = 4),
+  width = 14,
+  height = 12
+)
 
-ggplot2::ggsave(filename = paste0("Pies_combined_1.pdf"),
-       plot = gridExtra::grid.arrange(grobs=myplots[1:16], 
-                                      nrow=4, 
-                                      ncol=4),
-       width = 14,
-       height = 12)
+# 
+# ggplot2::ggsave(filename = paste0("Pies_combined_1.pdf"),
+#        plot = gridExtra::grid.arrange(grobs=myplots[1:16], 
+#                                       nrow=4, 
+#                                       ncol=4),
+#        width = 14,
+#        height = 12,
+#        device = cairo_pdf)
+# 
+# 
+# ggplot2::ggsave(filename = paste0("Pies_combined_2.pdf"),
+#        plot = gridExtra::grid.arrange(grobs=myplots[17:32], 
+#                                       nrow=4, 
+#                                       ncol=4),
+#        width = 14,
+#        height = 12)
+# 
+# 
+# ggplot2::ggsave(filename = paste0("Pies_combined_3.pdf"),
+#        plot = gridExtra::grid.arrange(grobs=myplots[33:39], 
+#                                       nrow=4, 
+#                                       ncol=4),
+#        width = 14,
+#        height = 12)
 
 
-ggplot2::ggsave(filename = paste0("Pies_combined_2.pdf"),
-       plot = gridExtra::grid.arrange(grobs=myplots[17:32], 
-                                      nrow=4, 
-                                      ncol=4),
-       width = 14,
-       height = 12)
-
-
-ggplot2::ggsave(filename = paste0("Pies_combined_3.pdf"),
-       plot = gridExtra::grid.arrange(grobs=myplots[33:39], 
-                                      nrow=4, 
-                                      ncol=4),
-       width = 14,
-       height = 12)
-
-
+ggplot2::ggsave(filename = "test.pdf",plot = gridExtra::marrangeGrob(myplots,nrow =4, ncol=4), width = 14,height = 12)

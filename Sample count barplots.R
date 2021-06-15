@@ -30,9 +30,9 @@ customtheme <- DC_theme_generator(
   type = 'L',
   legend = 'F',
   ticks = 'out',
-  x.axis.angle = 90,
+  x.axis.angle = 45,
   hjust = 1,
-  vjust = 0.5,
+  vjust = 1,
   fontsize.cex = 1.2,
   ax.fontstyle = "italic"
 )
@@ -83,9 +83,15 @@ ggplot(data = Stats,
   xlab("Tissue of origin of cancer")+
   ylab("Number of samples\nwith recurrent mutations")
 
+# ggsave(
+#   "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Hotspot Explorer/Data/Barplots/SampleCounts_2.pdf",
+#   width = 8,
+#   height = 5,
+#   device = cairo_pdf
+# )
+
 ggsave(
-  "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Hotspot Explorer/Data/Barplots/SampleCounts_2.pdf",
+  "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Hotspot Explorer/Data/Barplots/SampleCounts_2.svg",
   width = 8,
-  height = 5,
-  device = cairo_pdf
+  height = 5
 )
