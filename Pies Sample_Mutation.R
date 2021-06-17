@@ -61,12 +61,15 @@ plot_pie <- function(Tissue){
   sampleCount <- readRDS("/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Hotspot Explorer/Data/COSMIC_v92_R_DT/sampleCountByCancerType.RDS")
   if(Tissue == "all"){
     print("all")
-    subDF <- DF
+    subDF <- data.table::as.data.table(aggregate(DF$count ~ DF$Gene, FUN = sum))
+    colnames(subDF) <- c("Gene.name","count")
+    subDF[,per_sample:=count/sum(sampleCount$count)]
   } else {
     subDF <- DF[tissue == Tissue ,]
+    subDF[,per_sample:=count/sampleCount[tissue==Tissue,count]]
   }
   # slice weight normalized to number of samples for the tissue type
-  subDF[,per_sample:=count/sampleCount[tissue==Tissue,count]]
+  
   
   # slice weight normalized to total number of mutations in tissue type
   # subDF[, per_mutCount:=count/sum(subDF$count)]
@@ -75,7 +78,7 @@ plot_pie <- function(Tissue){
   setnames(pie_table_all,"Gene.name","Gene")
   setorder(pie_table_all,-per_sample)
   
-  threshold <- 20
+  threshold <- 25
   threshold <- min(threshold, uniqueN(pie_table_all))
   pie_table <- pie_table_all[1:threshold, ]
   # pie_table <- rbindlist(l = list(pie_table,list("Others",
@@ -125,27 +128,42 @@ plot_pie <- function(Tissue){
              position ="dodge", 
              width=0.75,  
              color=NA) + 
-    + 
     scale_fill_manual(values = sliceColors) + 
     scale_y_continuous(limits = c(0,1),
                        expand = c(0,0), 
                        labels = paste0(seq(0,100,by=25),"%")) +
-    theme(legend.position="right",
+    ylab("Percentage of samples") + 
+    xlab("Genes") +
+    theme(axis.line = element_line(colour = "black",
+                                   size=0.5),
+          panel.border = element_blank(),
+          panel.background = element_blank(),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          axis.ticks = element_line(colour = "black"),
+          legend.position="right",
           legend.text=element_text(family="serif",
                                    size = 6),
           title = element_text(family = "serif", 
-                               size = 7, 
+                               size = 8, 
                                face = "bold.italic"),
-          plot.title = element_text(hjust = 0.5),
+          plot.title = element_text(hjust = 0),
+          axis.text.x = element_text(family = "serif",
+                                     face = "plain",
+                                     angle = 90,
+                                     hjust = 1,
+                                     vjust = 1,
+                                     size = 6,
+                                     color = "black"),
           axis.title = element_text(family="serif", 
-                                    size = 6, 
+                                    size = 8, 
                                     face = "italic", 
                                     angle = 0),
           legend.key.size = unit(0.2, "lines")) + 
     guides(fill = guide_legend(title = "Genes", 
                                title.position = "top", 
                                byrow = T, 
-                               nrow = 21, 
+                               nrow = 25, 
                                title.theme = element_text(family="serif", 
                                                           size = 6, 
                                                           face = "italic", 
@@ -165,6 +183,7 @@ plot_pie <- function(Tissue){
 }
 
 plot_pie("lung")
+plot_pie("all")
 
 # subDF_FREQ$cent2 <- subDF_FREQ$N/sum(subDF_FREQ$N)
 subDF_FREQ[, per_mutCount:=N/sum(subDF_FREQ$N)] # DT syntax
