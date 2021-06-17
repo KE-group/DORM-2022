@@ -1,25 +1,174 @@
 # Pies mutations normalized to number of samples.
-
-rm(list=ls())
+rm(list=ls());gc()
 setwd("/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Hotspot Explorer/Data/Pies/RAW")
 
-muts <- readRDS("/Users/deepankar/OneDrive - O365 Turun yliopisto/ExtraWorkSync/Klaus-Lab-Data/Big Data/COSMIC/v92/Full_Database/20210602_4.COSMIC.all.coding.Mutatations.RDS")
-muts$Mutation.AA <- stringi::stri_replace_first_fixed(str = muts$Mutation.AA,pattern = "p.",replacement = "")
-muts$Mutation.AA <- stringi::stri_replace_all_regex(str = muts$Mutation.AA,pattern = "\\*",replacement = "X")
-# muts$mutID <- paste(muts$Gene.name,muts$Mutation.AA,sep="=")
+# ----> Set up data <-------
+# source("https://gist.githubusercontent.com/dchakro/8b1e97ba6853563dd0bb5b7be2317692/raw/parallelRDS.R")
+# 
+# # # muts <- readRDS("/Users/deepankar/OneDrive - O365 Turun yliopisto/ExtraWorkSync/Klaus-Lab-Data/Big Data/COSMIC/v92/Full_Database/20210602_4.COSMIC.all.coding.Mutatations.RDS")
+# 
+# library(data.table)
+# # # mutsDT <- data.table::as.data.table(muts)
+# # # saveRDS.gz(object = mutsDT, file = "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Hotspot Explorer/Data/COSMIC_v92_R_DT/allCodingMutations.RDS")
+# 
+# muts <- readRDS.gz(file = "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Hotspot Explorer/Data/COSMIC_v92_R_DT/allCodingMutations.RDS")
+# rm(loadRDS,readRDS.gz,writeRDS,saveRDS.gz)
+# 
+# muts$Mutation.AA <-
+#   stringi::stri_replace_first_fixed(str = muts$Mutation.AA,
+#                                     pattern = "p.",
+#                                     replacement = "")
+# muts$Mutation.AA <-
+#   stringi::stri_replace_all_regex(str = muts$Mutation.AA,
+#                                   pattern = "\\*",
+#                                   replacement = "X")
+# muts$mutID <- paste(muts$Gene.name, muts$Mutation.AA, sep = "=")
+# 
+# # output <- plyr::count(muts,"mutID")
+# 
+# paste("Total samples:", uniqueN(muts$Sample.name))
+# paste("Total mutations:", uniqueN(muts$mutID))
+# paste("Avg. mutation/sample:", uniqueN(muts$mutID) / uniqueN(muts$Sample.name))
+# 
+# 
+# Stats <- muts[,.N, .(Gene.name,Sample.name)]
+# # colnames(Stats)[3] <- "count"
+# setnames(Stats,"N","count")
+# 
+# Sample_Tissue_Map <- unique(muts[,c("Sample.name","Primary.site")])
+# print("Number of samples by tissue")
+# Sample_Tissue_Map[, .N, .(Primary.site)]
+# 
+# Stats$tissue <- Sample_Tissue_Map$Primary.site[match(x = Stats$Sample.name,table = Sample_Tissue_Map$Sample.name)]
+# Stats$tissue <- gsub("_"," ",Stats$tissue,fixed = T)
+# rm(Sample_Tissue_Map,muts);gc()
+# 
+# # sampleCount <- Stats[,.N, .(tissue)]
+# sampleCount <- unique(Stats[,.(Sample.name,tissue)])[,.N,.(tissue)]
+# setnames(sampleCount,"N","count")
+# saveRDS(object = sampleCount,file = "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Hotspot Explorer/Data/COSMIC_v92_R_DT/sampleCountByCancerType.RDS")
+# 
+# DF <- Stats[,.N, .(Gene.name,tissue)]
+# setnames(DF,c("N"),c("count"))
+# saveRDS(object = DF,file = "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Hotspot Explorer/Data/COSMIC_v92_R_DT/mutCountPerGeneByCancerType.RDS")
+# rm(Stats);gc()
 
-# output <- plyr::count(muts,"mutID")
-Stats <- as.data.frame(data.table::as.data.table(muts[,c("Gene.name","Sample.name")])[,.N, .(Gene.name,Sample.name)])
-colnames(Stats)[3] <- "count"
+# --------> Data set up and saved <-------
 
-Sample_Tissue_Map <- unique.data.frame(muts[,c("Sample.name","Primary.site")])
-Stats$tissue <- Sample_Tissue_Map$Primary.site[match(x = Stats$Sample.name,table = Sample_Tissue_Map$Sample.name)]
-Stats$tissue <- gsub("_"," ",Stats$tissue,fixed = T)
+plot_pie <- function(Tissue){
+  # Tissue <- "lung"
+  DF <- readRDS("/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Hotspot Explorer/Data/COSMIC_v92_R_DT/mutCountPerGeneByCancerType.RDS")
+  sampleCount <- readRDS("/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Hotspot Explorer/Data/COSMIC_v92_R_DT/sampleCountByCancerType.RDS")
+  if(Tissue == "all"){
+    print("all")
+    subDF <- DF
+  } else {
+    subDF <- DF[tissue == Tissue ,]
+  }
+  # slice weight normalized to number of samples for the tissue type
+  subDF[,per_sample:=count/sampleCount[tissue==Tissue,count]]
+  
+  # slice weight normalized to total number of mutations in tissue type
+  # subDF[, per_mutCount:=count/sum(subDF$count)]
+  
+  pie_table_all <- subDF[,.(Gene.name,per_sample)]
+  setnames(pie_table_all,"Gene.name","Gene")
+  setorder(pie_table_all,-per_sample)
+  
+  threshold <- 20
+  threshold <- min(threshold, uniqueN(pie_table_all))
+  pie_table <- pie_table_all[1:threshold, ]
+  # pie_table <- rbindlist(l = list(pie_table,list("Others",
+  #                                     sum(pie_table_all[(threshold + 1):uniqueN(pie_table_all), .(per_sample)]))))
+  rm(pie_table_all);gc()
+  
+  # sliceColors <- rep(NA, uniqueN(pie_table))
+  # idx <- which(pie_table$Gene == "Others")
+  # sliceColors[idx] <- "#c7c7c7"
+  # sliceColors[-idx] <-
+  sliceColors <- viridis::plasma(uniqueN(pie_table), direction = 1)
+  names(sliceColors) <- pie_table$Gene
+  
+  library(ggplot2)
+  # pie <- ggplot(pie_table,aes(x="",
+  #                             y=per_sample,
+  #                             fill=reorder(Gene,-per_sample)))+
+  #   geom_bar(stat="identity", 
+  #            width=1,  
+  #            color=NA) + 
+  #   theme_void() + 
+  #   scale_fill_manual(values = sliceColors) + 
+  #   theme(legend.position="right",
+  #         legend.text=element_text(family="serif",
+  #                                  size = 6),
+  #         title = element_text(family = "serif", 
+  #                              size = 7, 
+  #                              face = "bold.italic"),
+  #         plot.title = element_text(hjust = 0.5),
+  #         legend.key.size = unit(0.2, "lines")) + 
+  #   guides(fill = guide_legend(title = "Genes", 
+  #                              title.position = "top", 
+  #                              byrow = T, 
+  #                              nrow = 21, 
+  #                              title.theme = element_text(family="serif", 
+  #                                                         size = 6, 
+  #                                                         face = "italic", 
+  #                                                         angle = 0))) + 
+  #   coord_polar(theta = "y",
+  #               direction = -1)+
+  #   ggtitle(Tissue)
+  
+  bar <- ggplot(pie_table,aes(x=reorder(Gene,-per_sample),
+                                     y=per_sample,
+                                     fill=reorder(Gene,-per_sample)))+
+    geom_bar(stat="identity", 
+             position ="dodge", 
+             width=0.75,  
+             color=NA) + 
+    + 
+    scale_fill_manual(values = sliceColors) + 
+    scale_y_continuous(limits = c(0,1),
+                       expand = c(0,0), 
+                       labels = paste0(seq(0,100,by=25),"%")) +
+    theme(legend.position="right",
+          legend.text=element_text(family="serif",
+                                   size = 6),
+          title = element_text(family = "serif", 
+                               size = 7, 
+                               face = "bold.italic"),
+          plot.title = element_text(hjust = 0.5),
+          axis.title = element_text(family="serif", 
+                                    size = 6, 
+                                    face = "italic", 
+                                    angle = 0),
+          legend.key.size = unit(0.2, "lines")) + 
+    guides(fill = guide_legend(title = "Genes", 
+                               title.position = "top", 
+                               byrow = T, 
+                               nrow = 21, 
+                               title.theme = element_text(family="serif", 
+                                                          size = 6, 
+                                                          face = "italic", 
+                                                          angle = 0))) +
+    ggtitle(Tissue)
+  
+  return(bar)
+    # ggtitle(paste0(gsub("_", " ", Title, fixed = T),
+    #                " (n = ",
+    #                prettyNum(
+    #                  sum(pie_table$count,na.rm = T),
+    #                  big.mark = " ",
+    #                  scientific = F
+    #                ),
+    #                ")"))
+  
+}
 
-output <- as.data.frame(data.table::as.data.table(Stats[,c("Gene.name","tissue")])[,.N, .(Gene.name,tissue)])
+plot_pie("lung")
 
+# subDF_FREQ$cent2 <- subDF_FREQ$N/sum(subDF_FREQ$N)
+subDF_FREQ[, per_mutCount:=N/sum(subDF_FREQ$N)] # DT syntax
 
-rm(muts,Sample_Tissue_Map);gc()
 
 library(ggplot2)
 
@@ -29,6 +178,7 @@ pie_theme <- theme_void() + theme(legend.position="right",
                                     plot.title = element_text(family = "serif",
                                                               face="bold.italic",
                                                               color = "black"))
+
 
 for(cType in sort(unique(tmp$Primary.site))){
   # Make a frequency table from the geneList
