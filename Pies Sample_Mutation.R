@@ -12,7 +12,6 @@ setwd("/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Ho
 # # saveRDS.gz(object = mutsDT, file = "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Hotspot Explorer/Data/COSMIC_v92_R_DT/allCodingMutations.RDS")
 # 
 # muts <- readRDS.gz(file = "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Hotspot Explorer/Data/COSMIC_v92_R_DT/allCodingMutations.RDS")
-# rm(loadRDS,readRDS.gz,writeRDS,saveRDS.gz)
 # 
 # muts$Mutation.AA <-
 #   stringi::stri_replace_first_fixed(str = muts$Mutation.AA,
@@ -41,6 +40,7 @@ setwd("/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Ho
 # 
 # Stats$tissue <- Sample_Tissue_Map$Primary.site[match(x = Stats$Sample.name,table = Sample_Tissue_Map$Sample.name)]
 # Stats$tissue <- gsub("_"," ",Stats$tissue,fixed = T)
+# saveRDS.gz(object = Stats,file = "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Hotspot Explorer/Data/COSMIC_v92_R_DT/CountStatsRAW.RDS")
 # rm(Sample_Tissue_Map,muts);gc()
 # 
 # # sampleCount <- Stats[,.N, .(tissue)]
@@ -51,7 +51,9 @@ setwd("/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Ho
 # DF <- Stats[,.N, .(Gene.name,tissue)]
 # setnames(DF,c("N"),c("count"))
 # saveRDS(object = DF,file = "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Hotspot Explorer/Data/COSMIC_v92_R_DT/mutCountPerGeneByCancerType.RDS")
+# rm(loadRDS,readRDS.gz,writeRDS,saveRDS.gz)
 # rm(Stats);gc()
+
 
 # --------> Data set up and saved <-------
 
@@ -92,6 +94,8 @@ plot_bar <- function(Tissue){
   threshold <- 25
   threshold <- min(threshold, uniqueN(pie_table_all))
   pie_table <- pie_table_all[1:threshold, ]
+  
+  # "Others" = samples with mutations in genes other than these 25
   rm(pie_table_all);gc()
   
   sliceColors <- viridis::plasma(uniqueN(pie_table), direction = 1)
@@ -141,7 +145,7 @@ plot_bar <- function(Tissue){
                                     face = "italic", 
                                     angle = 0),
           legend.key.size = unit(0.2, "lines")) + 
-    guides(fill = guide_legend(title = "Genes", 
+    guides(fill = guide_legend(title = "Proteins", 
                                title.position = "top", 
                                byrow = T, 
                                nrow = 25, 
@@ -261,5 +265,5 @@ ggplot2::ggsave(
                                    byrow = T),
                                  as.table = F),
   width = 12,
-  height = 12
+  height = 11
 )
