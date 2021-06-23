@@ -1,5 +1,5 @@
 rm(list=ls());gc()
-setwd("/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Hotspot Explorer/Data/Pies/Normalized_to_sample/")
+setwd("/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Hotspot Explorer/Data/Barplots/Normalized_to_sample")
 
 plot_bar <- function(Tissue){
   # Tissue <- "lung"
@@ -55,7 +55,7 @@ plot_bar <- function(Tissue){
   
   sliceColors <- rep(NA, uniqueN(pie_table))
   idx <- which(pie_table$Gene == "Others")
-  sliceColors[idx] <- "#c7c7c7"
+  sliceColors[idx] <- "#a3a3a3"
   sliceColors[-idx] <- viridis::plasma(uniqueN(pie_table)-1, direction = 1)
   names(sliceColors) <- pie_table$Gene
   pie_table$Gene <- factor(pie_table$Gene,levels = pie_table$Gene)
@@ -74,7 +74,7 @@ plot_bar <- function(Tissue){
                        expand = c(0,0), 
                        labels = paste0(seq(0,100,by=25),"%")) +
     ylab("Percentage of samples") + 
-    xlab("Genes") +
+    xlab("Proteins") +
     theme(axis.line = element_line(colour = "black",
                                    size=0.5),
           panel.border = element_blank(),
@@ -93,7 +93,7 @@ plot_bar <- function(Tissue){
                                      face = "plain",
                                      angle = 90,
                                      hjust = 1,
-                                     vjust = 1,
+                                     vjust = 0.5,
                                      size = 6,
                                      color = "black"),
           axis.text.y = element_text(family = "serif",
@@ -105,14 +105,6 @@ plot_bar <- function(Tissue){
                                     face = "italic", 
                                     angle = 0),
           legend.key.size = unit(0.2, "lines")) + 
-    guides(fill = guide_legend(title = "Proteins", 
-                               title.position = "top", 
-                               byrow = T, 
-                               nrow = 25, 
-                               title.theme = element_text(family="serif", 
-                                                          size = 6, 
-                                                          face = "italic", 
-                                                          angle = 0))) +
     ggtitle(plot_title)
   
   return(bar)
