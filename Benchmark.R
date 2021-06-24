@@ -106,6 +106,42 @@ saveRDS(DF,file = paste0("./results/results_",test.name,".RDS"))
 rm(list=ls())
 gc()
 
+#----- data.frame vs data.table ------
+test.name <- "data.frame_vs_data.table"
+source("https://gist.githubusercontent.com/dchakro/8b1e97ba6853563dd0bb5b7be2317692/raw/parallelRDS.R")
+library(data.table)
+
+Stats <- readRDS.gz("/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Hotspot Explorer/Data/COSMIC_v92_R_DT/CountStatsRAW.RDS")
+rm(loadRDS,readRDS.gz,writeRDS,saveRDS.gz)
+
+source("https://raw.githubusercontent.com/dchakro/shared_Rscripts/master/summarySE.R")
+
+DF <- data.frame(expr="",N=NA,time=NA,sd=NA,se=NA,ci=NA,size=NA,stringsAsFactors = F)
+DF <- DF[-1,]
+
+for(i in c(100,10000,1000000)){
+  working_set <- Stats[1:i]
+  bmark <- microbenchmark("data.frame" = {
+    var1 <- table(unique.data.frame(working_set[, c("Sample.name", "tissue")])[, "tissue"])
+  }, "data.tablex1"={
+    setDTthreads(1)
+    var2 <- unique(working_set[,.(Sample.name,tissue)])[,.N,.(tissue)]
+  },
+  "data.tablex4"={
+    setDTthreads(4)
+    var3 <- unique(working_set[,.(Sample.name,tissue)])[,.N,.(tissue)]
+  }, times = 10,
+  control = list("warmup"))
+  saveRDS(bmark,file = paste0("./bmark/bmark_",test.name,"_",i,".RDS"))
+  results <- summarySE(bmark,measurevar = "time",groupvars = "expr",statistic = "mean")
+  results$size <- rep(i,length(results[,1]))
+  DF <- rbind.data.frame(DF,results)
+  rm(results,bmark)
+}
+saveRDS(DF,file = paste0("./results/results_",test.name,".RDS"))
+
+rm(list=ls())
+gc()
 #----------------------------
 test.name <- "table_plyr_data.table"
 library(data.table)
