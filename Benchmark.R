@@ -142,6 +142,8 @@ saveRDS(DF,file = paste0("./results/results_",test.name,".RDS"))
 
 rm(list=ls())
 gc()
+
+
 #----------------------------
 test.name <- "table_plyr_data.table"
 library(data.table)
@@ -151,8 +153,8 @@ muts <- readRDS.gz("/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/M
 
 muts$Mutation.AA <- stringi::stri_replace_first_fixed(str = muts$Mutation.AA,pattern = "p.",replacement = "")
 muts$Mutation.AA <- stringi::stri_replace_all_regex(str = muts$Mutation.AA,pattern = "\\*",replacement = "X")
-Mutations <- paste(muts$Gene.name,muts$Mutation.AA,sep="=")
-MutationID <- as.data.table(MutationID)
+MutationID <- as.data.table(paste(muts$Gene.name, muts$Mutation.AA, sep = "="))
+colnames(MutationID) <- c("MutationID")
 
 rm(loadRDS, readRDS.gz, writeRDS, saveRDS.gz, muts)
 gc()
@@ -162,7 +164,7 @@ source("https://raw.githubusercontent.com/dchakro/shared_Rscripts/master/summary
 DF <- data.frame(expr="",N=NA,time=NA,sd=NA,se=NA,ci=NA,size=NA,stringsAsFactors = F)
 DF <- DF[-1,]
 
-for(i in c(10000,1000000)){
+for(i in c(10000,100000,1000000)){
   working_set <- MutationID[1:i,]
   bmark <- microbenchmark("table" = {
   var1 <- as.data.frame(base::table(working_set[,1]))
@@ -175,8 +177,7 @@ for(i in c(10000,1000000)){
   "data.tablex4"={
     setDTthreads(4)
     var4 <- working_set[,.N,.(MutationID)]
-  }, times = 10,
-  control = list("warmup"))
+  }, times = 10)
   saveRDS(bmark,file = paste0("./bmark/bmark_",test.name,"_",i,".RDS"))
   results <- summarySE(bmark,measurevar = "time",groupvars = "expr",statistic = "mean")
   results$size <- rep(i,length(results[,1]))
