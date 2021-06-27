@@ -1,7 +1,9 @@
 rm(list=ls());gc()
+library(data.table)
+setDTthreads(4)
 setwd("/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Hotspot Explorer/Data/Normalized_to_sample")
 
-plot_bar <- function(Tissue){
+plot_pie <- function(Tissue){
   # Tissue <- "lung"
   if(Tissue == "gastrointestinal tract (site indeterminate)"){
     Tissue_title <- "GI tract (site indeterminate)"
@@ -55,62 +57,45 @@ plot_bar <- function(Tissue){
   
   sliceColors <- rep(NA, uniqueN(pie_table))
   idx <- which(pie_table$Gene == "Others")
-  sliceColors[idx] <- "#a3a3a3"
+  sliceColors[idx] <- "#c7c7c7"
   sliceColors[-idx] <- viridis::plasma(uniqueN(pie_table)-1, direction = 1)
   names(sliceColors) <- pie_table$Gene
   pie_table$Gene <- factor(pie_table$Gene,levels = pie_table$Gene)
   print(paste(Tissue,round(sum(pie_table$per_sample),digits = 2)))
   
   library(ggplot2)
-  bar <- ggplot(pie_table,aes(x=Gene,
+  pie <- ggplot(pie_table,aes(x="",
                               y=per_sample,
                               fill=Gene))+
     geom_bar(stat="identity", 
-             position ="dodge", 
-             width=0.75,  
+             width=1,  
              color=NA) + 
+    theme_void() + 
     scale_fill_manual(values = sliceColors) + 
-    scale_y_continuous(limits = c(0,1),
-                       expand = c(0,0), 
-                       labels = paste0(seq(0,100,by=25),"%")) +
-    ylab("Percentage of samples") + 
-    xlab("Proteins") +
-    theme(axis.line = element_line(colour = "black",
-                                   size=0.5),
-          panel.border = element_blank(),
-          panel.background = element_blank(),
-          panel.grid.major = element_blank(),
-          panel.grid.minor = element_blank(),
-          axis.ticks = element_line(colour = "black"),
-          legend.position="none",
+    theme(legend.position="right",
           legend.text=element_text(family="serif",
                                    size = 6),
           title = element_text(family = "serif", 
-                               size = 8, 
+                               size = 7, 
                                face = "bold.italic"),
-          plot.title = element_text(hjust = 0),
-          axis.text.x = element_text(family = "serif",
-                                     face = "plain",
-                                     angle = 90,
-                                     hjust = 1,
-                                     vjust = 0.5,
-                                     size = 6,
-                                     color = "black"),
-          axis.text.y = element_text(family = "serif",
-                                     face = "plain",
-                                     size = 6,
-                                     color = "black"),
-          axis.title = element_text(family="serif", 
-                                    size = 8, 
-                                    face = "italic", 
-                                    angle = 0),
+          plot.title = element_text(hjust = 0.5),
           legend.key.size = unit(0.2, "lines")) + 
+    guides(fill = guide_legend(title = "Genes", 
+                               title.position = "top", 
+                               byrow = T, 
+                               nrow = 26, 
+                               title.theme = element_text(family="serif", 
+                                                          size = 6, 
+                                                          face = "italic", 
+                                                          angle = 0))) + 
+    coord_polar(theta = "y",
+                direction = -1) + 
     ggtitle(plot_title)
   
-  return(bar)
+  return(pie)
 }
 
-# plot_bar("lung")
+# plot_pie("lung")
 # plot_bar("pancreas")
 # plot_bar("thyroid")
 
@@ -127,17 +112,17 @@ DF <- Stats[,.N, .(Gene.name,tissue)]
 setnames(DF,c("N"),c("count"))
 
 tissues <- unique(DF$tissue)
-# plot_bar("all")
+# plot_pie("all")
 
 myplots <-
   parallel::mclapply(
     X = as.list(c("all",sort(tissues))),
-    FUN = function(X) plot_bar(Tissue = X),
+    FUN = function(X) plot_pie(Tissue = X),
     mc.cores = parallel::detectCores()
   )
 
 ggplot2::ggsave(
-  filename = "Bars_with_others.pdf",
+  filename = "Pies_by_sample.pdf",
   plot = gridExtra::marrangeGrob(myplots, 
                                  layout_matrix = matrix(
                                    data = 1:16,
@@ -146,5 +131,5 @@ ggplot2::ggsave(
                                    byrow = T),
                                  as.table = F),
   width = 12,
-  height = 11
+  height = 14
 )
