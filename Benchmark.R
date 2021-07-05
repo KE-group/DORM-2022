@@ -5,8 +5,7 @@ dir.create("bmark")
 dir.create("results")
 library(microbenchmark)
 
-#-----------------
-## Reading TSV
+#------> Reading TSV <--------
 # base, readr, vroom
 source("https://raw.githubusercontent.com/dchakro/shared_Rscripts/master/summarySE.R")
 test.name <- "readingTSV"
@@ -46,14 +45,17 @@ for(file.name in file.prefix){
                           delim = "\t",
                           progress = F)
       rm(dat)
+    },
+    "data.table" = {
+      dat <- data.table::fread(file = file.name,
+                          sep = "\t", 
+                          header = T, 
+                          showProgress = F)
+      rm(dat)
     }
     ,times = 10)
     gc()
-    saveRDS(bmark,file = paste0("./bmark/bmark_",
-                                test.name,
-                                "_",
-                                f,
-                                ".RDS"))
+    # saveRDS(bmark, file = paste0("./bmark/bmark_", test.name, "_", f, ".RDS"))
     results <-
       summarySE(
         bmark,
@@ -65,7 +67,7 @@ for(file.name in file.prefix){
     DF <- rbind.data.frame(DF, results)
     rm(results, bmark)
 }
-saveRDS(DF,file = paste0("./results/results_",test.name,".RDS"))
+# saveRDS(DF,file = paste0("./results/results_",test.name,".RDS"))
 rm(list=ls())
 gc()
 
