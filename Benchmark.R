@@ -71,44 +71,49 @@ for(file.name in file.prefix){
 rm(list=ls())
 gc()
 
-#----------------------------
-# unlist & fixed
+#------> fixed & unlist-----------
 test.name <- "fixed_and_unlist"
-dat <- utils::read.table(file = "~/OneDrive - O365 Turun yliopisto/ExtraWorkSync/Klaus-Lab-Data/Big Data/BenchmarkR/COSMIC_test/subset/10001_d.tsv",header = T,sep = "\t",as.is = T,stringsAsFactors = T)
-
+dat <- data.table::fread(file = "~/OneDrive - O365 Turun yliopisto/ExtraWorkSync/Klaus-Lab-Data/Big Data/BenchmarkR/COSMIC_test/subset/10001_d.tsv",header = T,sep = "\t")
+colnames(dat) <- gsub(" ",".",colnames(dat))
 source("https://raw.githubusercontent.com/dchakro/shared_Rscripts/master/summarySE.R")
 
 DF <- data.frame(expr="",N=NA,time=NA,sd=NA,se=NA,ci=NA,size=NA,stringsAsFactors = F)
 DF <- DF[-1,]
 
 field <- dat$Mutation.AA
+rm(dat); gc()
 for(i in c(100,1000,10000)){
   working_set <- field[1:i]
   bmark <- microbenchmark("default" = {
     res_1 <- base::substring(text = working_set,
                              first = {unlist(base::gregexpr(pattern = "p.",
                                                             text = working_set))+2})
-  }, "faster"={
+  }, "withParams"={
     res_2 <- base::substring(text = working_set,
                              first = {unlist(base::gregexpr(pattern = "p.",
                                                             text = working_set,
                                                             fixed = T),
                                              use.names = F)+2})
-  }, times = 10,
-  control = list("warmup"))
+  }, times = 10)
   # print(identical(res_1,res_2))
-  saveRDS(bmark,file = paste0("./bmark/bmark_",test.name,"_",i,".RDS"))
-  results <- summarySE(bmark,measurevar = "time",groupvars = "expr",statistic = "mean")
+  # saveRDS(bmark, file = paste0("./bmark/bmark_", test.name, "_", i, ".RDS"))
+  results <-
+    summarySE(
+      bmark,
+      measurevar = "time",
+      groupvars = "expr",
+      statistic = "mean"
+    )
   results$size <- rep(i,length(results[,1]))
   DF <- rbind.data.frame(DF,results)
   rm(results,bmark)
 }
-saveRDS(DF,file = paste0("./results/results_",test.name,".RDS"))
+# saveRDS(DF, file = paste0("./results/results_", test.name, ".RDS"))
 
 rm(list=ls())
 gc()
 
-#----- data.frame vs data.table ------
+#------> data.frame vs data.table ------
 test.name <- "data.frame_vs_data.table"
 source("https://gist.githubusercontent.com/dchakro/8b1e97ba6853563dd0bb5b7be2317692/raw/parallelRDS.R")
 library(data.table)
@@ -132,21 +137,26 @@ for(i in c(100,10000,1000000)){
   "data.tablex4"={
     setDTthreads(4)
     var3 <- unique(working_set[,.(Sample.name,tissue)])[,.N,.(tissue)]
-  }, times = 10,
-  control = list("warmup"))
-  saveRDS(bmark,file = paste0("./bmark/bmark_",test.name,"_",i,".RDS"))
-  results <- summarySE(bmark,measurevar = "time",groupvars = "expr",statistic = "mean")
+  }, times = 10)
+  # saveRDS(bmark, file = paste0("./bmark/bmark_", test.name, "_", i, ".RDS"))
+  results <-
+    summarySE(
+      bmark,
+      measurevar = "time",
+      groupvars = "expr",
+      statistic = "mean"
+    )
   results$size <- rep(i,length(results[,1]))
   DF <- rbind.data.frame(DF,results)
   rm(results,bmark)
 }
-saveRDS(DF,file = paste0("./results/results_",test.name,".RDS"))
+# saveRDS(DF, file = paste0("./results/results_", test.name, ".RDS"))
 
 rm(list=ls())
 gc()
 
 
-#----------------------------
+#------> table_plyr_data.table------
 test.name <- "table_plyr_data.table"
 library(data.table)
 
@@ -166,7 +176,7 @@ source("https://raw.githubusercontent.com/dchakro/shared_Rscripts/master/summary
 DF <- data.frame(expr="",N=NA,time=NA,sd=NA,se=NA,ci=NA,size=NA,stringsAsFactors = F)
 DF <- DF[-1,]
 
-for(i in c(10000,100000,1000000)){
+for(i in c(10000,1000000)){
   working_set <- MutationID[1:i,]
   bmark <- microbenchmark("table" = {
   var1 <- as.data.frame(base::table(working_set[,1]))
@@ -176,17 +186,73 @@ for(i in c(10000,100000,1000000)){
     setDTthreads(1)
     var3 <- working_set[,.N,.(MutationID)]
   },
-  "data.tablex4"={
-    setDTthreads(4)
+  "data.tablex2"={
+    setDTthreads(2)
     var4 <- working_set[,.N,.(MutationID)]
   }, times = 10)
   saveRDS(bmark,file = paste0("./bmark/bmark_",test.name,"_",i,".RDS"))
-  results <- summarySE(bmark,measurevar = "time",groupvars = "expr",statistic = "mean")
+  results <-
+    summarySE(
+      bmark,
+      measurevar = "time",
+      groupvars = "expr",
+      statistic = "mean"
+    )
   results$size <- rep(i,length(results[,1]))
   DF <- rbind.data.frame(DF,results)
   rm(results,bmark)
 }
 saveRDS(DF,file = paste0("./results/results_",test.name,".RDS"))
+
+rm(list=ls())
+gc()
+
+#------> base vs stringi <-------
+test.name <- "base_V_stringi"
+dat <-
+  data.table::fread(file = "~/OneDrive - O365 Turun yliopisto/ExtraWorkSync/Klaus-Lab-Data/Big Data/BenchmarkR/COSMIC_test/subset/1000001_d.tsv", header = T, sep = "\t")
+colnames(dat) <- gsub(" ",".",colnames(dat))
+
+dat$Mutation.AA <- gsub("p.", "", dat$Mutation.AA, fixed = T)
+dat <-
+  dat[-grep("?", dat$Mutation.AA, fixed = T), ] # Removing "Unknown" mutations
+dat <-
+  dat[-grep("=", dat$Mutation.AA, fixed = T), ] # Removing silent mutations
+
+source("https://raw.githubusercontent.com/dchakro/shared_Rscripts/master/summarySE.R")
+DF <- data.frame(expr="",N=NA,time=NA,sd=NA,se=NA,ci=NA,size=NA,stringsAsFactors = F)
+DF <- DF[-1,]
+regex_pattern <- "[ACDEFGHIKLMNPQRSTVWYX]?[0-9]+"
+
+for(i in c(100,10000,length(dat$Mutation.AA))){
+  Mutation.AA <- dat$Mutation.AA[1:i]
+  bmark <- microbenchmark("base" = {
+    # res_b <- find_length_base(genomePos = genomePosition)
+    res_b <-
+      unlist(lapply(base::regmatches(
+        x = Mutation.AA,
+        m = gregexpr(pattern = regex_pattern, text = Mutation.AA, fixed = F)
+      ), `[[`, 1))
+    
+  }, "stringi"={
+    res_s <- stringi::stri_extract_first(str = Mutation.AA, regex = regex_pattern)
+  }, times = 10)
+  # print(identical(res_b,res_s))
+  saveRDS(bmark,file = paste0("./bmark/bmark_",test.name,"_",i,".RDS"))
+  results <-
+    summarySE(
+      bmark,
+      measurevar = "time",
+      groupvars = "expr",
+      statistic = "mean"
+    )
+  results$size <- rep(i,length(results[,1]))
+  DF <- rbind.data.frame(DF,results)
+  rm(results,bmark)
+}
+saveRDS(DF,file = paste0("./results/results_",test.name,".RDS"))
+rm(list=ls())
+gc()
 
 rm(list=ls())
 gc()
