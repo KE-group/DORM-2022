@@ -254,5 +254,157 @@ saveRDS(DF,file = paste0("./results/results_",test.name,".RDS"))
 rm(list=ls())
 gc()
 
+# parallel processing
+#-------->for vs apply vs foreach vs parSapply vs mapply <----------
+
+test.name <- "serialVparallel"
+library(doParallel)
+library(data.table)
+source("https://raw.githubusercontent.com/dchakro/shared_Rscripts/master/summarySE.R")
+dat <-
+  data.table::fread(file = "~/OneDrive - O365 Turun yliopisto/ExtraWorkSync/Klaus-Lab-Data/Big Data/BenchmarkR/COSMIC_test/subset/1000001_d.tsv", header = T, sep = "\t")
+colnames(dat) <- gsub(" ",".",colnames(dat))
+
+dat <- dat[-grep("_ENST", dat$Gene.name, fixed = T), ]
+dat$Mutation.AA <- gsub("p.", "", dat$Mutation.AA, fixed = T)
+dat <- dat[-grep("?", dat$Mutation.AA, fixed = T), ]
+dat <- dat[-grep("=", dat$Mutation.AA, fixed = T), ]
+# dim(dat) # 106450     40
+
+dat$mutID <- paste(dat$Gene.name, dat$Mutation.AA, sep = "=")
+mutations <-unique(dat$mutID) # 79972
+setDTthreads(1)
+
+DF <- data.frame(expr="",N=NA,time=NA,sd=NA,se=NA,ci=NA,size=NA,stringsAsFactors = F)
+DF <- DF[-1,]
+
+summarizeMutations <- function(mut){
+  # Written with data.table
+  var1 <- dat[mutID == mut, .N , .(Primary.site)]
+  setorder(var1, -N)
+  return(list(
+    mut,
+    sum(var1[, .(N)]),
+    stringi::stri_paste(var1$Primary.site, ":",
+                        var1$N,
+                        collapse = ',')
+  ))
+}
+
+for(i in c(3000, 30000)){
+  bmark <- microbenchmark("for" = {
+    # initialize a list & counter with expected size. 
+    # This speeds things considerably. For certain tasks this might not be possible.
+    results_1 <- vector(mode = "list", length = i*3)
+    counter <- 1 
+    
+    for(mut in mutations[1:i]){
+      results_1[seq(counter, counter + 2)] <- summarizeMutations(mut)
+      counter <- counter + 3
+    }
+    results_1 <- unlist(results_1, use.names = F)
+  },
+  "foreach" = {
+    myCluster <- makeCluster(4,
+                             type = "FORK",
+                             useXDR = F,
+                             .combine = cbind)
+  print(myCluster)
+  registerDoParallel(myCluster)
+  results_2 <- foreach(mut = mutations[1:i], .combine = cbind, .inorder = F) %dopar% {
+    return(summarizeMutations(mut))
+  }
+  stopCluster(myCluster)
+  results_2 <- unlist(results_2, use.names = F)
+  },
+  "lapply"= {
+    results_3 <-
+      unlist(lapply(X = mutations[1:i], FUN = summarizeMutations), use.names = F)
+    },
+  "mclapply"={
+    results_4 <- unlist(
+      parallel::mclapply(
+        X = mutations[1:i],
+        FUN = summarizeMutations,
+        mc.cores = parallel::detectCores()
+      ),
+      use.names = F
+    )
+  }, times = 5)
+  # saveRDS(bmark,file = paste0("./bmark/bmark_",test.name,"_",i,".RDS"))
+  results <- summarySE(bmark,measurevar = "time",groupvars = "expr",statistic = "mean")
+  results$size <- rep(i,length(results[,1]))
+  DF <- rbind.data.frame(DF,results)
+  rm(results,bmark)
+}
+# saveRDS(DF,file = paste0("./results/results_",test.name,".RDS"))
 rm(list=ls())
 gc()
+
+# ---------- parallel saveRDS.gz()
+source("https://raw.githubusercontent.com/dchakro/shared_Rscripts/master/summarySE.R")
+source('https://gist.githubusercontent.com/dchakro/8b1e97ba6853563dd0bb5b7be2317692/raw/parallelRDS.R')
+DT <- readRDS.gz("/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Hotspot Explorer/Data/COSMIC_v92_R_DT/allCodingMutations.RDS")
+
+test.name <- "parallel_saveRDS"
+size <- c("100", "10000", "1000000")
+
+DF <- data.frame(expr="",N=NA,time=NA,sd=NA,se=NA,ci=NA,size=NA,stringsAsFactors = F)
+DF <- DF[-1,] 
+
+for(i in size){
+  bmark <- microbenchmark(
+    "base" = {
+      base::saveRDS(object = DT[1:i],
+                    compress = "gzip",
+                    file = "/dev/null")
+    },
+    "parallel" = {
+      saveRDS.gz(
+        object = DT[1:i],
+        threads = parallel::detectCores(),
+        compression_level = 6,
+        file = "/dev/null"
+      )
+    }
+    ,times = 10)
+  gc()
+  saveRDS(bmark,file = paste0("./bmark/bmark_",test.name,"_",i,".RDS"))
+  results <- summarySE(bmark,measurevar = "time",groupvars = "expr",statistic = "mean")
+  results$size <- rep(i,length(results[,1]))
+  DF <- rbind.data.frame(DF,results)
+  rm(results,bmark)
+}
+saveRDS(DF,file = paste0("./results/results_",test.name,".RDS"))
+rm(list=ls())
+gc()
+
+
+# ---------- parallel readRDS.gz()
+source("https://raw.githubusercontent.com/dchakro/shared_Rscripts/master/summarySE.R")
+source('https://gist.githubusercontent.com/dchakro/8b1e97ba6853563dd0bb5b7be2317692/raw/parallelRDS.R')
+FILE <- "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Hotspot Explorer/Data/COSMIC_v92_R_DT/CountStatsRAW.RDS" # 51 MB RDS file
+
+test.name <- "parallel_readRDS"
+
+DF <- data.frame(expr="",N=NA,time=NA,sd=NA,se=NA,ci=NA,size=NA,stringsAsFactors = F)
+DF <- DF[-1,] 
+
+bmark <- microbenchmark(
+  "base" = {
+    base::readRDS(file = FILE)
+  },
+  "parallel" = {
+    readRDS.gz(file = FILE, threads = parallel::detectCores())
+  }
+  ,times = 10)
+gc()
+saveRDS(bmark,file = paste0("./bmark/bmark_",test.name,".RDS"))
+results <- summarySE(bmark,measurevar = "time",groupvars = "expr",statistic = "mean")
+results$size <- rep("51 MB", length(results[, 1]))
+DF <- rbind.data.frame(DF, results)
+rm(results, bmark)
+saveRDS(DF, file = paste0("./results/results_", test.name, ".RDS"))
+rm(list = ls())
+gc()
+
