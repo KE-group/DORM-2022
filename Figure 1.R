@@ -44,14 +44,25 @@ ggplot(data=topN,aes(x=reorder(mutsID,-counts),
   geom_hline(yintercept = 70,
              linetype="dashed")
 
-ggsave("/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Hotspot Explorer/Data/Barplots/HotspotMutations.pdf",width = 5,height = 5)
-ggsave("/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Hotspot Explorer/Figures/panels from R/1A.pdf",width = 5,height = 5)
+
+ggsave(
+  "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Hotspot Explorer/Data/Barplots/HotspotMutations.pdf",
+  width = 5,
+  height = 5,
+  device = cairo_pdf
+)
+ggsave(
+  "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Hotspot Explorer/Figures/panels from R/1A.pdf",
+  width = 5,
+  height = 5,
+  device = cairo_pdf
+)
 
 DF <- topN[, .(counts = sum(counts)), by = Gene]
 setorder(DF, -counts)
 
 gene_census <- data.table::fread('/Users/deepankar/OneDrive - O365 Turun yliopisto/ExtraWorkSync/Klaus-Lab-Data/Big Data/COSMIC Cancer Gene census/Census All.tsv')
-setnames(gene_census,make.names(colnames(gene_census)))
+setnames(gene_census, make.names(colnames(gene_census)))
 
 # gene_census[Gene.Symbol == "TP53",.(Role.in.Cancer)]
 gene_census[Gene.Symbol == "TP53", Role.in.Cancer := "TSG"]
@@ -114,8 +125,19 @@ ggplot(data=topN,
   geom_hline(yintercept = 80,
              linetype="dashed")
 
-ggsave("/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Hotspot Explorer/Data/Barplots/HotspotResidues.pdf",width = 5,height = 5)
-ggsave("/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Hotspot Explorer/Figures/panels from R/1B.pdf",width = 5,height = 5)
+# ggsave(
+#   "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Hotspot Explorer/Data/Barplots/HotspotResidues.pdf",
+#   width = 5,
+#   height = 5,
+#   device = cairo_pdf
+# )
+
+ggsave(
+  "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Hotspot Explorer/Figures/panels from R/1B.pdf",
+  width = 5,
+  height = 5,
+  device = cairo_pdf
+)
 
 gene_census <- data.table::fread('/Users/deepankar/OneDrive - O365 Turun yliopisto/ExtraWorkSync/Klaus-Lab-Data/Big Data/COSMIC Cancer Gene census/Census All.tsv')
 setnames(gene_census,make.names(colnames(gene_census)))
