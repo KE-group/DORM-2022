@@ -117,7 +117,7 @@ plot_bar <- function(Tissue){
 # ----> Set up environment <-------
 source("https://gist.githubusercontent.com/dchakro/8b1e97ba6853563dd0bb5b7be2317692/raw/parallelRDS.R")
 
-Stats <- readRDS.gz("/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Hotspot Explorer/Data/COSMIC_v92_R_DT/CountStatsRAW.RDS")
+Stats <- readRDS.gz("/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Hotspot Explorer/Data/COSMIC_v94_R_DT/CountStatsRAW.RDS")
 rm(loadRDS,readRDS.gz,writeRDS,saveRDS.gz)
 
 sampleCount <- unique(Stats[,.(Sample.name,tissue)])[,.N,.(tissue)]

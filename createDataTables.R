@@ -1,17 +1,17 @@
 rm(list=ls());gc()
-setwd("/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Hotspot Explorer/Data/Pies/Normalized_to_sample/")
+setwd("/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Hotspot Explorer/Data/COSMIC_v94_R_DT/")
 
 # ----> Set up data <-------
 source("https://gist.githubusercontent.com/dchakro/8b1e97ba6853563dd0bb5b7be2317692/raw/parallelRDS.R")
 
-# muts <- readRDS("/Users/deepankar/OneDrive - O365 Turun yliopisto/ExtraWorkSync/Klaus-Lab-Data/Big Data/COSMIC/v92/Full_Database/20210602_4.COSMIC.all.coding.Mutatations.RDS")
-
 library(data.table)
-setDTthreads(4)
+
+# convert v92 to data.table 
+# muts <- readRDS("/Users/deepankar/OneDrive - O365 Turun yliopisto/ExtraWorkSync/Klaus-Lab-Data/Big Data/COSMIC/v92/Full_Database/20210602_4.COSMIC.all.coding.Mutatations.RDS")
 # mutsDT <- data.table::as.data.table(muts)
 # saveRDS.gz(object = mutsDT, file = "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Hotspot Explorer/Data/COSMIC_v92_R_DT/allCodingMutations.RDS")
 
-muts <- readRDS.gz(file = "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Hotspot Explorer/Data/COSMIC_v92_R_DT/allCodingMutations.RDS")
+muts <- readRDS.gz(file = "/Users/deepankar/OneDrive - O365 Turun yliopisto/ExtraWorkSync/Klaus-Lab-Data/Big Data/COSMIC/v94/Full_Database/4.COSMIC.all.coding.Mutatations.RDS")
 
 muts$Mutation.AA <-
   stringi::stri_replace_first_fixed(str = muts$Mutation.AA,
@@ -34,23 +34,23 @@ Stats <- muts[,.N, .(Gene.name,Sample.name)]
 # colnames(Stats)[3] <- "count"
 setnames(Stats,"N","count")
 
-Sample_Tissue_Map <- unique(muts[,c("Sample.name","Primary.site")])
+Sample_Tissue_Map <- unique(muts[,.(Sample.name,Primary.site)])
 print("Number of samples by tissue")
 Sample_Tissue_Map[, .N, .(Primary.site)]
 
 Stats$tissue <- Sample_Tissue_Map$Primary.site[match(x = Stats$Sample.name,table = Sample_Tissue_Map$Sample.name)]
 Stats$tissue <- gsub("_"," ",Stats$tissue,fixed = T)
-saveRDS.gz(object = Stats,file = "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Hotspot Explorer/Data/COSMIC_v92_R_DT/CountStatsRAW.RDS")
+saveRDS.gz(object = Stats,file = "CountStatsRAW.RDS")
 rm(Sample_Tissue_Map,muts);gc()
 
 # sampleCount <- Stats[,.N, .(tissue)]
 sampleCount <- unique(Stats[,.(Sample.name,tissue)])[,.N,.(tissue)]
 setnames(sampleCount,"N","count")
-saveRDS(object = sampleCount,file = "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Hotspot Explorer/Data/COSMIC_v92_R_DT/sampleCountByCancerType.RDS")
+saveRDS(object = sampleCount,file = "sampleCountByCancerType.RDS")
 
 DF <- Stats[,.N, .(Gene.name,tissue)]
 setnames(DF,c("N"),c("count"))
-saveRDS(object = DF,file = "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Hotspot Explorer/Data/COSMIC_v92_R_DT/mutCountPerGeneByCancerType.RDS")
+saveRDS(object = DF,file = "mutCountPerGeneByCancerType.RDS")
 rm(loadRDS,readRDS.gz,writeRDS,saveRDS.gz)
 rm(Stats);gc()
 
