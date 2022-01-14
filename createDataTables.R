@@ -1,5 +1,5 @@
 rm(list=ls());gc()
-setwd("/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Hotspot Explorer/Data/COSMIC_v94_R_DT/")
+setwd("/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Data/COSMIC_v94_R_DT/")
 
 # ----> Set up data <-------
 source("https://gist.githubusercontent.com/dchakro/8b1e97ba6853563dd0bb5b7be2317692/raw/parallelRDS.R")
@@ -54,5 +54,19 @@ saveRDS(object = DF,file = "mutCountPerGeneByCancerType.RDS")
 rm(loadRDS,readRDS.gz,writeRDS,saveRDS.gz)
 rm(Stats);gc()
 
+rm(list=ls());gc()
+source("https://gist.githubusercontent.com/dchakro/8b1e97ba6853563dd0bb5b7be2317692/raw/parallelRDS.R")
+muts <- readRDS.gz("/Users/deepankar/OneDrive - O365 Turun yliopisto/ExtraWorkSync/Klaus-Lab-Data/Big Data/COSMIC/v94/Full_Database/1_Selected_columns.RDS")
+
+dataDF <- muts[, .(Sample.name, Gene.name,Mutation.AA, Primary.site)]
+saveRDS.gz(object = dataDF,file = "AllsamplesMinInfo.RDS")
+rm(muts);gc()
+
+SampleDF <- unique(dataDF[,.(Sample.name, Primary.site)])
+Stats <- SampleDF[,.(.N), by = Primary.site]
+colnames(Stats) <- c("tissue","count")
+setorder(Stats, -count)
+saveRDS(object = Stats,file = "UnfilteredSampleCount.RDS")
+rm(list=ls());gc()
 
 # --------> Data set up and saved <-------
