@@ -17,12 +17,12 @@ plot_bar <- function(Tissue){
     subDF <- data.table::as.data.table(aggregate(DF$count ~ DF$Gene, FUN = sum))
     colnames(subDF) <- c("Gene.name","count")
     setorder(subDF,-count)
-    plot_title <- paste0(Tissue_title," (n = ",sum(sampleCount$count),")")
+    plot_title <- paste0(Tissue_title," (n = ",sum(sampleCount$count)," samples)")
   } else {
     subDF <- DF[tissue == Tissue ,]
     setorder(subDF,-count)
     subDF[,tissue:=NULL]
-    plot_title <- paste0(Tissue_title," (n = ",sampleCount[tissue==Tissue,count],")")
+    plot_title <- paste0(Tissue_title," (n = ",sampleCount[tissue==Tissue,count]," samples)")
   }
   # if slice weight normalized to total number of mutations in tissue type
   # subDF[, per_mutCount:=count/sum(subDF$count)]
@@ -110,10 +110,6 @@ plot_bar <- function(Tissue){
   return(bar)
 }
 
-# plot_bar("lung")
-# plot_bar("pancreas")
-# plot_bar("thyroid")
-
 # ----> Set up environment <-------
 source("https://gist.githubusercontent.com/dchakro/8b1e97ba6853563dd0bb5b7be2317692/raw/parallelRDS.R")
 
@@ -122,12 +118,21 @@ rm(loadRDS,readRDS.gz,writeRDS,saveRDS.gz)
 
 sampleCount <- unique(Stats[,.(Sample.name,tissue)])[,.N,.(tissue)]
 setnames(sampleCount,"N","count")
+# saveRDS(object=sampleCount,file =  "/Users/deepankar/OneDrive - O365 Turun yliopisto/Git/GitHub/websites/eleniuslabtools.utu.fi/shiny-apps/COSMIC/HotspotMutations/data/SampleCount.RDS")
 
 DF <- Stats[,.N, .(Gene.name,tissue)]
 setnames(DF,c("N"),c("count"))
+# saveRDS(object =DF,file =  "/Users/deepankar/OneDrive - O365 Turun yliopisto/Git/GitHub/websites/eleniuslabtools.utu.fi/shiny-apps/COSMIC/HotspotMutations/data/SampleCountByTissue.RDS")
 
 tissues <- unique(DF$tissue)
 # plot_bar("all")
+# plot_bar("pancreas")
+# plot_bar("thyroid")
+# plot_bar("lung")
+
+obj <- plot_bar("all")
+saveRDS(object = obj,file = "/Users/deepankar/OneDrive - O365 Turun yliopisto/Git/GitHub/websites/eleniuslabtools.utu.fi/shiny-apps/COSMIC/HotspotMutations/data/bar_with_others/all.RDS")
+# ggsave(plot = obj,filename = "/Users/deepankar/OneDrive - O365 Turun yliopisto/Git/GitHub/websites/eleniuslabtools.utu.fi/shiny-apps/COSMIC/HotspotMutations/test.svg",width = 4,height = 4)
 
 myplots <-
   parallel::mclapply(

@@ -3,7 +3,7 @@ library(data.table)
 rm(list=ls());gc()
 # ---> Figure 1A : Barplot top 100 recurrent mutations <----
 
-resDF <- readRDS("/Users/deepankar/OneDrive - O365 Turun yliopisto/ExtraWorkSync/Klaus-Lab-Data/Big Data/COSMIC/v94/Full_Database/20210707.FrequencyByMutation.RDS")
+resDF <- readRDS("/Users/deepankar/OneDrive - O365 Turun yliopisto/ExtraWorkSync/Klaus-Lab-Data/Big Data/COSMIC/v94/Full_Database/20210709.FrequencyByMutation.RDS")
 
 resDF[,mutsID := paste(Gene, Mutation, sep="_")]
 
@@ -37,8 +37,8 @@ ggplot(data=topN,aes(x=reorder(mutsID,-counts),
            color=NA)+
   ylab("Number of somatic mutations")+
   xlab(paste0("Top ", length(topN$mutsID), " recurrent mutations"))+
-  scale_y_continuous(limits = c(0, max(topN$counts)),
-                     breaks = seq(0,1500,400),
+  scale_y_continuous(limits = c(0, 1600),
+                     breaks = seq(0,1600,400),
                      expand = c(0, 0))+
   theme_plot+
   geom_hline(yintercept = 70,
@@ -85,7 +85,7 @@ write.table(x = topN[1:20,1:3],
 # ---> Figure 1B Barplot top 100 recurrentlt mutated residues <----
 
 rm(list=ls());gc()
-resDF <- readRDS("/Users/deepankar/OneDrive - O365 Turun yliopisto/ExtraWorkSync/Klaus-Lab-Data/Big Data/COSMIC/v94/Full_Database/20210707.FrequencyByResidue.RDS")
+resDF <- readRDS("/Users/deepankar/OneDrive - O365 Turun yliopisto/ExtraWorkSync/Klaus-Lab-Data/Big Data/COSMIC/v94/Full_Database/20210709.FrequencyByResidue.RDS")
 resDF[,mutsID := paste(Gene, Residue, sep="_")]
 
 theme_plot <- theme(axis.line = element_line(colour = "black",
@@ -115,22 +115,22 @@ topN <- resDF[1:n,]
 ggplot(data=topN,
        aes(x=reorder(mutsID,-counts),
            y=counts))+
-  geom_col(fill="#00abea",color=NA)+
+  geom_col(fill="#5529C5",color=NA)+
   ylab("Number of somatic mutations")+
   xlab(paste0("Top ",length(topN$mutsID)," recurrently mutated residues"))+
-  scale_y_continuous(limits = c(0,max(topN$counts)),
+  scale_y_continuous(limits = c(0,2500),
                      breaks = seq(0,2500,500),
                      expand = c(0, 0))+
   theme_plot+
   geom_hline(yintercept = 80,
              linetype="dashed")
 
-# ggsave(
-#   "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Hotspot Explorer/Data/Barplots/HotspotResidues.pdf",
-#   width = 5,
-#   height = 5,
-#   device = cairo_pdf
-# )
+ggsave(
+  "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Hotspot Explorer/Data/Barplots/HotspotResidues.pdf",
+  width = 5,
+  height = 5,
+  device = cairo_pdf
+)
 
 ggsave(
   "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Hotspot Explorer/Figures/panels from R/1B.pdf",
@@ -138,6 +138,9 @@ ggsave(
   height = 5,
   device = cairo_pdf
 )
+
+DF <- topN[, .(counts = sum(counts)), by = Gene]
+setorder(DF, -counts)
 
 gene_census <- data.table::fread('/Users/deepankar/OneDrive - O365 Turun yliopisto/ExtraWorkSync/Klaus-Lab-Data/Big Data/COSMIC Cancer Gene census/Census All.tsv')
 setnames(gene_census,make.names(colnames(gene_census)))
