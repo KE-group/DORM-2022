@@ -4,7 +4,7 @@ rm(list=ls());gc()
 # ---> Figure S2 <----
 
 source("https://gist.githubusercontent.com/dchakro/8b1e97ba6853563dd0bb5b7be2317692/raw/parallelRDS.R")
-muts <- readRDS.gz("/Users/deepankar/OneDrive - O365 Turun yliopisto/ExtraWorkSync/Klaus-Lab-Data/Big Data/COSMIC/v94/Full_Database/4.COSMIC.all.coding.Mutatations.RDS")
+muts <- readRDS.gz("/Users/deepankar/OneDrive - O365 Turun yliopisto/ExtraWorkSync/Klaus-Lab-Data/Big Data/COSMIC/v95/Full_Database/4.COSMIC.all.coding.Mutatations.RDS")
 rm(loadRDS,readRDS.gz,writeRDS,saveRDS.gz)
 
 muts[, Mutation.AA := stringi::stri_replace_first_fixed(str = Mutation.AA,
@@ -29,16 +29,24 @@ rm("%nin%",singleOccurances, muts)
 gc()
 
 # ---> Figure S2 A : No. of samples with recurrent mutations by tissue type <----
-rm(list = ls()[! ls() %in% c("dataDF", "DC_theme_generator")])
+rm(list = ls()[! ls() %in% c("dataDF")])
 SampleDF <- unique(dataDF[,.(Sample.name, Primary.site)])
 Stats <- SampleDF[,.(.N), by = Primary.site]
 colnames(Stats) <- c("tissue","count")
 setorder(Stats, -count)
+allStats <- readRDS("UnfilteredSampleCount.RDS")
+Stats <- merge.data.table(x = allStats, y = Stats, by = 'tissue')
 Stats[, tissue := gsub("_", " ", tissue)]
+colnames(Stats)[2:3] <- c("All","Recurrent")
+setorder(Stats,-All)
+rm(allStats,dataDF,SampleDF)
+gc()
 
+Stats <- reshape2::melt(Stats)
+colnames(Stats)[2:3] <- c("Type","count")
 source('https://raw.githubusercontent.com/dchakro/ggplot_themes/master/DC_theme_generator.R')
 customtheme <- DC_theme_generator(type = 'L',
-                                  legend = 'F',
+                                  legend = 'T',
                                   ticks = 'out',
                                   x.axis.angle = 45,
                                   hjust = 1,
@@ -46,17 +54,22 @@ customtheme <- DC_theme_generator(type = 'L',
                                   fontsize.cex = 1.2,
                                   ax.fontstyle = "italic")
 options(scipen=100000)
-ggplot(data = Stats, aes(y=count,
-                         x=reorder(tissue, -count)))+
-  geom_col(fill="#000000",
-           width=0.75)+
+ggplot(data = Stats, aes(x = reorder(tissue,-count),y = count,
+                         fill=Type))+
+  geom_col(width=0.75, position = "identity")+
   xlab("Tissue of origin of cancer")+
   ylab("Number of samples\nwith recurrent mutations")+
   customtheme +
-  scale_y_continuous(expand = c(0, 0))
+  scale_y_continuous(expand = c(0, 0))+
+  scale_fill_manual(values = c("#c7c7c7","#000000"),
+                    labels=c("Unique","Recurrent"))+
+  theme(legend.position="right",
+        legend.text=element_text(family="serif",
+                                 size=11),
+        legend.key.size = unit(0.5, "lines"))
 
 ggsave(
-  "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Hotspot Explorer/Figures/panels from R/S2 A.pdf",
+  "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Figures/panels from R/S2 A.pdf",
   width = 8,
   height = 5,
   device = cairo_pdf
@@ -92,7 +105,7 @@ ggplot(data = Stats, aes(y=count,
 
 
 ggsave(
-  "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Hotspot Explorer/Figures/panels from R/S2 B.pdf",
+  "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Figures/panels from R/S2 B.pdf",
   width = 8,
   height = 5,
   device = cairo_pdf
@@ -139,7 +152,7 @@ ggplot(data = Stats, aes(y=count,
 # )
 
 ggsave(
-  "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Hotspot Explorer/Figures/panels from R/S2 C.pdf",
+  "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Figures/panels from R/S2 C.pdf",
   width = 8,
   height = 5,
   device = cairo_pdf

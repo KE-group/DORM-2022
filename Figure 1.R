@@ -3,7 +3,7 @@ library(data.table)
 rm(list=ls());gc()
 # ---> Figure 1A : Barplot top 100 recurrent mutations <----
 
-resDF <- readRDS("/Users/deepankar/OneDrive - O365 Turun yliopisto/ExtraWorkSync/Klaus-Lab-Data/Big Data/COSMIC/v94/Full_Database/20210709.FrequencyByMutation.RDS")
+resDF <- readRDS("/Users/deepankar/OneDrive - O365 Turun yliopisto/ExtraWorkSync/Klaus-Lab-Data/Big Data/COSMIC/v95/Full_Database/20220117.FrequencyByMutation.RDS")
 
 resDF[,mutsID := paste(Gene, Mutation, sep="_")]
 
@@ -46,13 +46,13 @@ ggplot(data=topN,aes(x=reorder(mutsID,-counts),
 
 
 ggsave(
-  "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Hotspot Explorer/Data/Barplots/HotspotMutations.pdf",
+  "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Data/Barplots/HotspotMutations.pdf",
   width = 5,
   height = 5,
   device = cairo_pdf
 )
 ggsave(
-  "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Hotspot Explorer/Figures/panels from R/1A.pdf",
+  "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Figures/panels from R/1A.pdf",
   width = 5,
   height = 5,
   device = cairo_pdf
@@ -77,7 +77,7 @@ table(DF$Role)
 topN[,.(sum = sum(counts)), by = Role]
 
 write.table(x = topN[1:20,1:3],
-            file ="/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Hotspot Explorer/Figures/panels from R/1A.table.tsv",
+            file ="/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Figures/panels from R/1A.table.tsv",
             sep=",",
             row.names = F,
             col.names = T)
@@ -85,7 +85,7 @@ write.table(x = topN[1:20,1:3],
 # ---> Figure 1B Barplot top 100 recurrentlt mutated residues <----
 
 rm(list=ls());gc()
-resDF <- readRDS("/Users/deepankar/OneDrive - O365 Turun yliopisto/ExtraWorkSync/Klaus-Lab-Data/Big Data/COSMIC/v94/Full_Database/20210709.FrequencyByResidue.RDS")
+resDF <- readRDS("/Users/deepankar/OneDrive - O365 Turun yliopisto/ExtraWorkSync/Klaus-Lab-Data/Big Data/COSMIC/v95/Full_Database/20220119.FrequencyByResidue.RDS")
 resDF[,mutsID := paste(Gene, Residue, sep="_")]
 
 theme_plot <- theme(axis.line = element_line(colour = "black",
@@ -126,14 +126,14 @@ ggplot(data=topN,
              linetype="dashed")
 
 ggsave(
-  "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Hotspot Explorer/Data/Barplots/HotspotResidues.pdf",
+  "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Data/Barplots/HotspotResidues.pdf",
   width = 5,
   height = 5,
   device = cairo_pdf
 )
 
 ggsave(
-  "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Hotspot Explorer/Figures/panels from R/1B.pdf",
+  "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Figures/panels from R/1B.pdf",
   width = 5,
   height = 5,
   device = cairo_pdf
@@ -158,7 +158,7 @@ table(DF$Role)
 topN[,.(sum = sum(counts)), by = Role]
 
 write.table(x = topN[1:20,1:3],
-            file ="/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Hotspot Explorer/Figures/panels from R/1B.table.tsv",
+            file ="/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Figures/panels from R/1B.table.tsv",
             sep=",",
             row.names = F,
             col.names = T)
