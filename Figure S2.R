@@ -63,9 +63,13 @@ Stats <- merge.data.table(x = allStats, y = Stats, by = "tissue")
 Stats[, tissue := gsub("_", " ", tissue)]
 colnames(Stats)[2:3] <- c("All","Recurrent")
 setorder(Stats,-All)
+Stats[,Unique:=All-Recurrent]
 
-Stats <- reshape2::melt(Stats)
+Stats <- reshape2::melt(Stats[,c("tissue","Recurrent","Unique")])
 colnames(Stats)[2:3] <- c("Type","count")
+# Stats$Type <- relevel(Stats$Type,"Unique") # Makes Unique first
+Stats$Type <- factor(Stats$Type,levels=c("Unique","Recurrent"))
+
 source('https://raw.githubusercontent.com/dchakro/ggplot_themes/master/DC_theme_generator.R')
 customtheme <- DC_theme_generator(type = 'L',
                                   legend = 'T',
@@ -78,13 +82,12 @@ customtheme <- DC_theme_generator(type = 'L',
 options(scipen=100000)
 ggplot(data = Stats, aes(x = reorder(tissue,-count),y = count,
                          fill=Type))+
-  geom_col(width=0.75, position = "identity")+
+  geom_col(width=0.75, position = "stack")+
   xlab("Tissue of origin of cancer")+
   ylab("Number of samples")+
   customtheme +
   scale_y_continuous(expand = c(0, 0))+
   scale_fill_manual(values = c("#c7c7c7","#000000"),
-                    labels=c("Unique","Recurrent"),
                     name="Type of \nSample")+
   theme(legend.position="right",
         legend.text=element_text(family="serif",
@@ -100,7 +103,8 @@ ggsave(
 
 
 # ---> Figure S2 B : No. of Recurrent mutations by cancer type <----
-rm(list = ls()[! ls() %in% c("dataDF","fullData", "DC_theme_generator")]);gc()
+rm(list = ls()[!ls() %in% c("dataDF", "fullData", "DC_theme_generator")])
+gc()
 
 Stats <- dataDF[,.(.N), by = Primary.site]
 colnames(Stats) <- c("tissue","count")
@@ -114,8 +118,13 @@ Stats[, tissue := gsub("_", " ", tissue)]
 colnames(Stats)[2:3] <- c("All","Recurrent")
 setorder(Stats,-All)
 
-Stats <- reshape2::melt(Stats)
+Stats[,Unique:=All-Recurrent]
+summary(Stats$Recurrent/Stats$All)
+
+Stats.bak <- Stats
+Stats <- reshape2::melt(Stats[,c("tissue","Recurrent","Unique")])
 colnames(Stats)[2:3] <- c("Type","count")
+Stats$Type <- factor(Stats$Type,levels=c("Unique","Recurrent"))
 
 if(!any(grepl("DC_theme_generator",x = ls()))){
   source('https://raw.githubusercontent.com/dchakro/ggplot_themes/master/DC_theme_generator.R')  
@@ -132,28 +141,17 @@ options(scipen=100000)
 
 ggplot(data = Stats, aes(x = reorder(tissue,-count),y = count,
                          fill=Type))+
-  geom_col(width=0.75, position = "identity")+
+  geom_col(width=0.75, position = "stack")+
   xlab("Tissue of origin of cancer")+
   ylab("Number of mutations")+
   customtheme +
   scale_y_continuous(expand = c(0, 0))+
   scale_fill_manual(values = c("#c7c7c7","#000000"),
-                    labels=c("Unique","Recurrent"),
                     name="Type of \nMutation")+
   theme(legend.position="right",
         legend.text=element_text(family="serif",
                                  size=11),
         legend.key.size = unit(0.5, "lines"))
-
-# ggplot(data = Stats, aes(y=count,
-#                          x=reorder(tissue, -count)))+
-#   geom_col(fill="#000000",
-#            width=0.75)+
-#   customtheme+
-#   scale_y_continuous(expand = c(0,0))+
-#   xlab("Tissue of origin of cancer")+
-#   ylab("Number of recurrent mutations")
-
 
 ggsave(
   "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Figures/panels from R/S2 B.pdf",
@@ -161,6 +159,32 @@ ggsave(
   height = 5,
   device = cairo_pdf
 )
+
+ggplot(data = Stats, aes(x = reorder(tissue,-count),y = count,
+                         fill=Type))+
+  geom_col(width=0.75, position = "fill")+
+  geom_hline(yintercept = median(Stats.bak$Recurrent / Stats.bak$All), 
+             color = "red",
+             linetype = "dashed")+
+  xlab("Tissue of origin of cancer")+
+  ylab("Percentage of mutations")+
+  customtheme +
+  scale_y_continuous(expand = c(0, 0),
+                     labels = paste0(c(0,25,50,75,100), " %"))+
+  scale_fill_manual(values = c("#c7c7c7","#000000"),
+                    name="Type of \nMutation")+
+  theme(legend.position="right",
+        legend.text=element_text(family="serif",
+                                 size=11),
+        legend.key.size = unit(0.5, "lines"))
+
+ggsave(
+  "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Figures/panels from R/S2 B_2.pdf",
+  width = 8,
+  height = 5,
+  device = cairo_pdf
+)
+
 
 # ---> Figure S2 C : TMB plot <----
 rm(list = ls()[! ls() %in% c("dataDF", "fullData", "DC_theme_generator")])
@@ -187,6 +211,7 @@ customtheme <- DC_theme_generator(type = 'L',
                                   fontsize.cex = 1.2,
                                   ax.fontstyle = "italic")
 options(scipen=100000)
+
 ggplot(data = Stats, aes(y=count,
                          x=tissue))+
   geom_jitter(alpha=0.25,
