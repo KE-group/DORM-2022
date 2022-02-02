@@ -4,6 +4,7 @@ rm(list=ls());gc()
 # ---> Figure S2 <----
 
 # Generating dataDF 
+
 # source("https://gist.githubusercontent.com/dchakro/8b1e97ba6853563dd0bb5b7be2317692/raw/parallelRDS.R")
 # muts <- readRDS.gz("/Users/deepankar/OneDrive - O365 Turun yliopisto/ExtraWorkSync/Klaus-Lab-Data/Big Data/COSMIC/v95/Full_Database/4.COSMIC.all.coding.Mutatations.RDS")
 # 
@@ -17,6 +18,10 @@ rm(list=ls());gc()
 # 
 # muts[, mutID := paste(Gene.name,Mutation.AA,sep="=")]
 # 
+# keep <- c("Gene.name","Mutation.AA","Sample.name","Primary.site")
+# fullData <- muts[, keep, with=F]
+# saveRDS.gz(fullData, file="/Users/deepankar/OneDrive - O365 Turun yliopisto/ExtraWorkSync/Klaus-Lab-Data/Big Data/COSMIC/v95/Full_Database/AllMuts_fullData.RDS")
+# 
 # output <- muts[,.(.N), by = mutID]
 # data.table::setnames(output, "N", "freq")
 # singleOccurances <- output[freq==1, .(mutID)]
@@ -25,24 +30,18 @@ rm(list=ls());gc()
 # '%nin%' <- Negate('%in%')
 # dataDF <- muts[, .(Sample.name, mutID, Primary.site)]
 # dataDF <- dataDF[mutID %nin% singleOccurances$mutID, ]
+# saveRDS.gz(dataDF, file="/Users/deepankar/OneDrive - O365 Turun yliopisto/ExtraWorkSync/Klaus-Lab-Data/Big Data/COSMIC/v95/Full_Database/RecurrentMuts.dataDF.RDS")
+# 
 # rm("%nin%", singleOccurances, muts)
 # gc()
 
-# saveRDS.gz(dataDF, file="/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Data/COSMIC_v95_R_DT/RecurrentMuts.dataDF.RDS")
 
 # Pre-load data
 source("https://gist.githubusercontent.com/dchakro/8b1e97ba6853563dd0bb5b7be2317692/raw/parallelRDS.R")
 
-dataDF <- readRDS.gz("/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Data/COSMIC_v95_R_DT/RecurrentMuts.dataDF.RDS")
-fullData <- readRDS.gz("/Users/deepankar/OneDrive - O365 Turun yliopisto/ExtraWorkSync/Klaus-Lab-Data/Big Data/COSMIC/v95/Full_Database/1_AllsamplesMinInfo.RDS")
+dataDF <- readRDS.gz("/Users/deepankar/OneDrive - O365 Turun yliopisto/ExtraWorkSync/Klaus-Lab-Data/Big Data/COSMIC/v95/Full_Database/RecurrentMuts.dataDF.RDS")
+fullData <- readRDS.gz("/Users/deepankar/OneDrive - O365 Turun yliopisto/ExtraWorkSync/Klaus-Lab-Data/Big Data/COSMIC/v95/Full_Database/AllMuts_fullData.RDS")
 
-# <---- Purging irrelevant entries from data ---->
-# Removing ENSEMBL transcripts and retaining just the genes
-fullData <- fullData[!grepl("_ENST", Gene.name, fixed = T), ]
-# Removing mutations annotated as ? in amino acid change
-fullData <- fullData[!stringi::stri_detect_regex(str = Mutation.AA, pattern = "^p.\\?" ),]
-# Removing Synonumous mutations
-fullData <- fullData[!grepl(pattern = '=', x = Mutation.AA, fixed = T), ]
 
 ### Begin plotting
 
@@ -108,8 +107,6 @@ gc()
 
 Stats <- dataDF[,.(.N), by = Primary.site]
 colnames(Stats) <- c("tissue","count")
-Stats[, tissue := gsub("_", " ", tissue)]
-
 allStats <- fullData[,.(.N), by = Primary.site]
 colnames(allStats) <- c("tissue","count")
 
