@@ -123,6 +123,15 @@ Stats <- reshape2::melt(Stats[,c("tissue","Recurrent","Unique")])
 colnames(Stats)[2:3] <- c("Type","count")
 Stats$Type <- factor(Stats$Type,levels=c("Unique","Recurrent"))
 
+write.table(
+  Stats.bak,
+  file = "~/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Figures/panels from R/S2 B.csv",
+  sep = ",",
+  quote = F,
+  row.names = F,
+  col.names = T
+)
+
 if(!any(grepl("DC_theme_generator",x = ls()))){
   source('https://raw.githubusercontent.com/dchakro/ggplot_themes/master/DC_theme_generator.R')  
 }
@@ -185,6 +194,9 @@ ggplot(data = Stats, aes(x = reorder(tissue,-count),y = count,
   geom_hline(yintercept = median(Stats.bak$Recurrent / Stats.bak$All, na.rm=T), 
              color = "red",
              linetype = "dashed")+
+geom_hline(yintercept = mean(Stats.bak$Recurrent / Stats.bak$All, na.rm=T), 
+           color = "blue",
+           linetype = "dashed")+
   xlab("Tissue of origin of cancer")+
   ylab("Percentage of mutations")+
   customtheme +
@@ -207,8 +219,10 @@ ggsave(
 
 # ---> Figure S2 C : TMB plot <----
 rm(list = ls()[! ls() %in% c("dataDF", "fullData", "DC_theme_generator")])
+gc()
 
-Stats <- dataDF[,.(.N), by = Sample.name]
+# Stats <- dataDF[,.(.N), by = Sample.name]
+Stats <- fullData[,.(.N), by = Sample.name]
 colnames(Stats) <- c("Sample.name","count")
 setorder(Stats, -count)
 Sample_Tissue_Map <- unique(dataDF[,.(Sample.name, Primary.site)])
@@ -216,6 +230,7 @@ Sample_Tissue_Map <- unique(dataDF[,.(Sample.name, Primary.site)])
 # Sample_Tissue_Map[, .N, .(Primary.site)]
 Stats[, tissue := Sample_Tissue_Map$Primary.site[match(x = Stats$Sample.name, table = Sample_Tissue_Map$Sample.name)]]
 Stats[, tissue := gsub("_", " ", tissue)]
+Stats$tissue[is.na(Stats$tissue)] <- "NS" # setting NA as Not specified
 Stats$tissue <- factor(Stats$tissue)
 Stats$tissue <- relevel(Stats$tissue,"NS")
 
@@ -242,6 +257,7 @@ ggplot(data = Stats, aes(y=count,
   scale_y_continuous()+
   xlab("Tissue of origin of cancer")+
   ylab("Number of mutations\nper sample")+
+  ggtitle(paste("(n = ",length(Stats$Sample.name),")"))+
   customtheme 
 
 # ggsave(
@@ -254,6 +270,6 @@ ggplot(data = Stats, aes(y=count,
 ggsave(
   "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Figures/panels from R/S2 C.pdf",
   width = 8,
-  height = 5,
+  height = 5.5,
   device = cairo_pdf
 )
