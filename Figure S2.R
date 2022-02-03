@@ -140,7 +140,7 @@ ggplot(data = Stats, aes(x = reorder(tissue,-count),y = count,
                          fill=Type))+
   geom_col(width=0.75, position = "stack")+
   xlab("Tissue of origin of cancer")+
-  ylab("Number of mutations")+
+  ylab("Mutations reported\nin the database")+
   customtheme +
   scale_y_continuous(expand = c(0, 0))+
   scale_fill_manual(values = c("#c7c7c7","#000000"),
@@ -150,8 +150,30 @@ ggplot(data = Stats, aes(x = reorder(tissue,-count),y = count,
                                  size=11),
         legend.key.size = unit(0.5, "lines"))
 
+
 ggsave(
   "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Figures/panels from R/S2 B.pdf",
+  width = 8,
+  height = 5,
+  device = cairo_pdf
+)
+
+ggplot(data = Stats[Stats$Type!="Unique",], aes(x = reorder(tissue,-count),y = count,
+                         fill=Type))+
+  geom_col(width=0.75, position = "stack")+
+  xlab("Tissue of origin of cancer")+
+  ylab("Mutations reported\nin the database")+
+  customtheme +
+  scale_y_continuous(expand = c(0, 0))+
+  scale_fill_manual(values = c("#000000"),
+                    name="Type of \nMutation")+
+  theme(legend.position="right",
+        legend.text=element_text(family="serif",
+                                 size=11),
+        legend.key.size = unit(0.5, "lines"))
+
+ggsave(
+  "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Figures/panels from R/S2 B_2.pdf",
   width = 8,
   height = 5,
   device = cairo_pdf
@@ -160,7 +182,7 @@ ggsave(
 ggplot(data = Stats, aes(x = reorder(tissue,-count),y = count,
                          fill=Type))+
   geom_col(width=0.75, position = "fill")+
-  geom_hline(yintercept = median(Stats.bak$Recurrent / Stats.bak$All), 
+  geom_hline(yintercept = median(Stats.bak$Recurrent / Stats.bak$All, na.rm=T), 
              color = "red",
              linetype = "dashed")+
   xlab("Tissue of origin of cancer")+
@@ -176,7 +198,7 @@ ggplot(data = Stats, aes(x = reorder(tissue,-count),y = count,
         legend.key.size = unit(0.5, "lines"))
 
 ggsave(
-  "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Figures/panels from R/S2 B_2.pdf",
+  "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Figures/panels from R/S2 B_3.pdf",
   width = 8,
   height = 5,
   device = cairo_pdf
@@ -194,6 +216,8 @@ Sample_Tissue_Map <- unique(dataDF[,.(Sample.name, Primary.site)])
 # Sample_Tissue_Map[, .N, .(Primary.site)]
 Stats[, tissue := Sample_Tissue_Map$Primary.site[match(x = Stats$Sample.name, table = Sample_Tissue_Map$Sample.name)]]
 Stats[, tissue := gsub("_", " ", tissue)]
+Stats$tissue <- factor(Stats$tissue)
+Stats$tissue <- relevel(Stats$tissue,"NS")
 
 if(!any(grepl("DC_theme_generator",x = ls()))){
   source('https://raw.githubusercontent.com/dchakro/ggplot_themes/master/DC_theme_generator.R')  
@@ -211,7 +235,7 @@ options(scipen=100000)
 
 ggplot(data = Stats, aes(y=count,
                          x=tissue))+
-  geom_jitter(alpha=0.25,
+  geom_jitter(alpha=0.15,
               height = 0,
               size=1.5,
               width=0.3)+
