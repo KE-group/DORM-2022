@@ -36,7 +36,7 @@ summarizeMutations <- function(mut){
 
 bmark_out_tsv <- paste0("table/bmark","_",test.name,".tsv")
 file.create(bmark_out_tsv, showWarnings = F)
-for(i in c(3000, 30000)){
+for(i in c(600, 6000, 60000)){
   bmark <- microbenchmark("for" = {
     # initialize a list & counter with expected size. 
     # This speeds things considerably. For certain tasks this might not be possible.

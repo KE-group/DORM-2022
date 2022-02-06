@@ -2,7 +2,8 @@
 # base, readr, vroom
 source("https://raw.githubusercontent.com/dchakro/shared_Rscripts/master/summarySE.R")
 test.name <- "readingTSV"
-file.prefix <- c("101", "1001", "100001")
+# file.prefix <- c("101", "1001", "100001")
+file.prefix <- c("1001", "100001")
 file.prefix <- paste0("~/OneDrive - O365 Turun yliopisto/ExtraWorkSync/Klaus-Lab-Data/Big Data/BenchmarkR/COSMIC_test/subset/",file.prefix,"_d.tsv")
 bmark_out_tsv <- paste0("table/bmark","_",test.name,".tsv")
 file.create(bmark_out_tsv, showWarnings = F)
