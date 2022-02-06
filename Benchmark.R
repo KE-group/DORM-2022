@@ -34,3 +34,7 @@ source("../../code/benchmark_snippet/parallel_saveRDS.R")
 # -------> parallel readRDS.gz() <-------
 rm(list=ls());gc()
 source("../../code/benchmark_snippet/parallel_readRDS.R")
+
+# --------> grep: GNU vs BSD vs R <--------
+rm(list=ls());gc()
+source("../../code/benchmark_snippet/grep.R")
