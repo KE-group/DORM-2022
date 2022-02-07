@@ -3,6 +3,10 @@ gc()
 library(stringi)
 # library(data.table)
 
+setwd("/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Data/Performance Comparison/Lighthouse reports/")
+
+# grep JSON from lighthouse reports using ripgrep.
+# system('rg "<script>window.__LIGHTHOUSE_JSON__ =" >| out.txt', intern = F, wait = T)
 Data <- readLines(
   "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Data/Performance Comparison/Lighthouse reports/ripgrep_output.txt"
 )
