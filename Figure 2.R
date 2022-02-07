@@ -1,7 +1,7 @@
 library(ggplot2)
 library(data.table)
 rm(list=ls());gc()
-# ---> Figure 1A : Barplot top 100 recurrent mutations <----
+# ---> Figure 2A : Barplot top 100 recurrent mutations <----
 
 resDF <- readRDS("/Users/deepankar/OneDrive - O365 Turun yliopisto/ExtraWorkSync/Klaus-Lab-Data/Big Data/COSMIC/v95/Full_Database/20220117.FrequencyByMutation.RDS")
 
@@ -52,7 +52,7 @@ ggsave(
   device = cairo_pdf
 )
 ggsave(
-  "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Figures/panels from R/1A.pdf",
+  "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Figures/panels from R/2A.pdf",
   width = 5,
   height = 5,
   device = cairo_pdf
@@ -67,6 +67,8 @@ setnames(gene_census, make.names(colnames(gene_census)))
 # gene_census[Gene.Symbol == "TP53",.(Role.in.Cancer)]
 gene_census[Gene.Symbol == "TP53", Role.in.Cancer := "TSG"]
 
+View(topN[,.N, by = Gene])
+
 topN[, Role := gene_census[match(topN$Gene, gene_census$Gene.Symbol), .(Role.in.Cancer)]]
 DF[, Role := gene_census$Role.in.Cancer[match(DF$Gene, gene_census$Gene.Symbol)]]
 
@@ -77,7 +79,7 @@ table(DF$Role)
 topN[,.(sum = sum(counts)), by = Role]
 
 write.table(x = topN[1:20,1:3],
-            file ="/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Figures/panels from R/1A.table.tsv",
+            file ="/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Figures/panels from R/2A.table.tsv",
             sep=",",
             row.names = F,
             col.names = T)
@@ -133,7 +135,7 @@ ggsave(
 )
 
 ggsave(
-  "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Figures/panels from R/1B.pdf",
+  "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Figures/panels from R/2B.pdf",
   width = 5,
   height = 5,
   device = cairo_pdf
@@ -148,6 +150,8 @@ setnames(gene_census,make.names(colnames(gene_census)))
 # gene_census[Gene.Symbol == "TP53",.(Role.in.Cancer)]
 gene_census[Gene.Symbol == "TP53", Role.in.Cancer := "TSG"]
 
+View(topN[,.N, by = Gene])
+
 topN[, Role := gene_census[match(topN$Gene, gene_census$Gene.Symbol), .(Role.in.Cancer)]]
 DF[, Role := gene_census$Role.in.Cancer[match(DF$Gene, gene_census$Gene.Symbol)]]
 
@@ -158,7 +162,7 @@ table(DF$Role)
 topN[,.(sum = sum(counts)), by = Role]
 
 write.table(x = topN[1:20,1:3],
-            file ="/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Figures/panels from R/1B.table.tsv",
+            file ="/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Figures/panels from R/2B.table.tsv",
             sep=",",
             row.names = F,
             col.names = T)

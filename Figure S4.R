@@ -69,6 +69,10 @@ colnames(Stats)[2:3] <- c("Type","count")
 # Stats$Type <- relevel(Stats$Type,"Unique") # Makes Unique first
 Stats$Type <- factor(Stats$Type,levels=c("Unique","Recurrent"))
 
+Stats <- as.data.table(Stats)
+
+Stats[,.(sum(count)), by=Type]
+
 source('https://raw.githubusercontent.com/dchakro/ggplot_themes/master/DC_theme_generator.R')
 customtheme <- DC_theme_generator(type = 'L',
                                   legend = 'T',
@@ -93,15 +97,15 @@ ggplot(data = Stats, aes(x = reorder(tissue,-count),y = count,
                                  size=11),
         legend.key.size = unit(0.5, "lines"))
 
-ggsave(
-  "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Figures/panels from R/S2 A.pdf",
-  width = 8,
-  height = 5,
-  device = cairo_pdf
-)
+# ggsave(
+#   "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Figures/panels from R/S4 A.pdf",
+#   width = 8,
+#   height = 5,
+#   device = cairo_pdf
+# )
 
 
-# ---> Figure S2 B : No. of Recurrent mutations by cancer type <----
+# ---> Figure XXX : No. of Recurrent mutations by cancer type <----
 rm(list = ls()[!ls() %in% c("dataDF", "fullData", "DC_theme_generator")])
 gc()
 
@@ -125,7 +129,7 @@ Stats$Type <- factor(Stats$Type,levels=c("Unique","Recurrent"))
 
 write.table(
   Stats.bak,
-  file = "~/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Figures/panels from R/S2 B.csv",
+  file = "~/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Figures/panels from R/S4 B.csv",
   sep = ",",
   quote = F,
   row.names = F,
@@ -161,7 +165,7 @@ ggplot(data = Stats, aes(x = reorder(tissue,-count),y = count,
 
 
 ggsave(
-  "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Figures/panels from R/S2 B.pdf",
+  "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Figures/panels from R/S4 B.pdf",
   width = 8,
   height = 5,
   device = cairo_pdf
@@ -182,7 +186,7 @@ ggplot(data = Stats[Stats$Type!="Unique",], aes(x = reorder(tissue,-count),y = c
         legend.key.size = unit(0.5, "lines"))
 
 ggsave(
-  "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Figures/panels from R/S2 B_2.pdf",
+  "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Figures/panels from R/S4 B_2.pdf",
   width = 8,
   height = 5,
   device = cairo_pdf
@@ -210,7 +214,7 @@ geom_hline(yintercept = mean(Stats.bak$Recurrent / Stats.bak$All, na.rm=T),
         legend.key.size = unit(0.5, "lines"))
 
 ggsave(
-  "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Figures/panels from R/S2 B_3.pdf",
+  "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Figures/panels from R/S4 B_3.pdf",
   width = 8,
   height = 5,
   device = cairo_pdf
@@ -234,6 +238,11 @@ Stats$tissue[is.na(Stats$tissue)] <- "NS" # setting NA as Not specified
 Stats$tissue <- factor(Stats$tissue)
 Stats$tissue <- relevel(Stats$tissue,"NS")
 
+summary(Stats$count)
+Stats <- Stats[count>1,]
+Stats$count2 <- log10(Stats$count)
+View(Stats[,.(mean(count2),mean(count)),by=tissue])
+
 if(!any(grepl("DC_theme_generator",x = ls()))){
   source('https://raw.githubusercontent.com/dchakro/ggplot_themes/master/DC_theme_generator.R')  
 }
@@ -254,11 +263,17 @@ ggplot(data = Stats, aes(y=count,
               height = 0,
               size=1.5,
               width=0.3)+
-  scale_y_continuous()+
+  stat_summary(fun = mean, 
+               fun.min = mean, 
+               fun.max = mean,
+               geom = "crossbar", 
+               color="red")+
   xlab("Tissue of origin of cancer")+
+  scale_y_continuous(breaks = c(1,10,100,1000,10000),limits = c(1,25000))+
   ylab("Number of mutations\nper sample")+
-  ggtitle(paste("(n = ",length(Stats$Sample.name),")"))+
-  customtheme 
+  ggtitle(paste("(n = ",length(Stats$Sample.name),"samples)"))+
+  customtheme+
+  coord_trans(y = "log10")
 
 # ggsave(
 #   "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Hotspot Explorer/Data/Barplots/TMB.pdf",
@@ -268,7 +283,7 @@ ggplot(data = Stats, aes(y=count,
 # )
 
 ggsave(
-  "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Figures/panels from R/S2 C.pdf",
+  "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Figures/panels from R/S4 C.pdf",
   width = 8,
   height = 5.5,
   device = cairo_pdf
