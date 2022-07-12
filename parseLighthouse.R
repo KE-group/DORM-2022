@@ -6,7 +6,7 @@ library(stringi)
 setwd("/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Data/Performance Comparison/Lighthouse reports/")
 
 # grep JSON from lighthouse reports using ripgrep.
-# system('rg "<script>window.__LIGHTHOUSE_JSON__ =" >| out.txt', intern = F, wait = T)
+system("rg '<script>window.__LIGHTHOUSE_JSON__ =' >| ripgrep_output.txt", intern = F, wait = F)
 Data <- readLines(
   "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Data/Performance Comparison/Lighthouse reports/ripgrep_output.txt"
 )

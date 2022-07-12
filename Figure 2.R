@@ -3,7 +3,8 @@ library(data.table)
 rm(list=ls());gc()
 # ---> Figure 2A : Barplot top 100 recurrent mutations <----
 
-resDF <- readRDS("/Users/deepankar/OneDrive - O365 Turun yliopisto/ExtraWorkSync/Klaus-Lab-Data/Big Data/COSMIC/v95/Full_Database/20220117.FrequencyByMutation.RDS")
+# resDF <- readRDS("/Users/deepankar/OneDrive - O365 Turun yliopisto/ExtraWorkSync/Klaus-Lab-Data/Big Data/COSMIC/v95/Full_Database/20220117.FrequencyByMutation.RDS")
+resDF <- readRDS("/Users/deepankar/OneDrive - O365 Turun yliopisto/Git/GitHub/websites/eleniuslabtools.utu.fi/shiny-apps/DORM/Mutations/data/20220608.FrequencyByMutation.RDS")
 
 resDF[,mutsID := paste(Gene, Mutation, sep="_")]
 
