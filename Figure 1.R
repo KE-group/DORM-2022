@@ -46,8 +46,8 @@ ggplot(data=topN,aes(x=reorder(mutsID,-counts),
 
 
 ggsave(
-  "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Data/Barplots/HotspotMutations.pdf",
-  width = 5,
+  "~/Desktop/Barplots/Hotspots.pdf",
+  width = 15,
   height = 5,
   device = cairo_pdf
 )

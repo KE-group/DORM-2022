@@ -45,16 +45,17 @@ fullData <- readRDS.gz("/Users/deepankar/OneDrive - O365 Turun yliopisto/ExtraWo
 
 ### Begin plotting
 
-# ---> Figure S2 A : No. of samples with recurrent mutations by tissue type <----
+# ---> Figure S4 A : No. of samples with recurrent mutations by tissue type <----
 rm(list = ls()[! ls() %in% c("dataDF","fullData")]) ; gc()
 SampleDF <- unique(dataDF[,.(Sample.name, Primary.site)])
 Stats <- SampleDF[,.(.N), by = Primary.site]
 colnames(Stats) <- c("tissue","count")
 setorder(Stats, -count)
 
-SampleDF <- unique(fullData[,.(Sample.name, Primary.site)])
-allStats <- SampleDF[,.(.N), by = Primary.site]
+SampleDF_f <- unique(fullData[,.(Sample.name, Primary.site)])
+allStats <- SampleDF_f[,.(.N), by = Primary.site]
 colnames(allStats) <- c("tissue","count")
+setorder(allStats, -count)
 
 # rm(loadRDS,readRDS.gz,writeRDS,saveRDS.gz)
 
@@ -79,29 +80,63 @@ customtheme <- DC_theme_generator(type = 'L',
                                   fontsize.cex = 1.2,
                                   ax.fontstyle = "italic")
 options(scipen=100000)
-ggplot(data = Stats, aes(x = reorder(tissue,-count),y = count,
+Stats$tissue <- reorder(Stats$tissue,-Stats$count)
+ggplot(data = Stats, aes(x = tissue,
+                         y = count,
                          fill=Type))+
   geom_col(width=0.75, position = "stack")+
   xlab("Tissue of origin of cancer")+
   ylab("Number of samples")+
   customtheme +
-  scale_y_continuous(expand = c(0, 0))+
+  scale_y_continuous(expand = c(0, 0),limits = c(0,5000))+
   scale_fill_manual(values = c("#c7c7c7","#000000"),
-                    name="Type of \nSample")+
+                    name="Sample\n Harboring")+
   theme(legend.position="right",
         legend.text=element_text(family="serif",
                                  size=11),
         legend.key.size = unit(0.5, "lines"))
 
+
+
+# ggsave(
+#   "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Figures/panels from R/S4 A.pdf",
+#   width = 8,
+#   height = 5,
+#   device = cairo_pdf
+# )
+
+# ---> Figure S4 B : Samples with only unique mutations <----
+'%nin%' <- Negate('%in%')
+Samples_having_only_unique_muts <- SampleDF_f$Sample.name[which(SampleDF_f$Sample.name %nin% SampleDF$Sample.name)]
+
+miniDF <- fullData[Sample.name %in% Samples_having_only_unique_muts, ]
+miniDF <- miniDF[,.(.N), by = Sample.name]
+miniDF[, tissue:=SampleDF_f$Primary.site[match(Sample.name, SampleDF_f$Sample.name)]]
+miniDF[, tissue := gsub("_", " ", tissue)]
+miniDF$tissue <- factor(miniDF$tissue)
+miniDF$tissue <- forcats::fct_relevel(miniDF$tissue, levels(Stats$tissue))
+  
+ggplot(data = miniDF, aes(y=N,
+                         x=tissue))+
+  geom_jitter(alpha=0.15,
+              height = 0,
+              size=1.5,
+              width=0.3)+
+  xlab("Tissue of origin of cancer")+
+  ylab("Number of mutations\nper sample")+
+  scale_y_continuous(breaks = c(1,10,25,50,75,100),limits = c(0,100))+
+  ggtitle(paste("(n = ",length(miniDF$Sample.name),"samples ; ", sum(miniDF$N), " mutations)"))+
+  customtheme
+  
+
 ggsave(
-  "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Figures/panels from R/S2 A.pdf",
-  width = 8,
+  "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Figures/panels from R/S4 B.pdf",
+  width = 7,
   height = 5,
   device = cairo_pdf
 )
 
-
-# ---> Figure S2 B : No. of Recurrent mutations by cancer type <----
+# ---> Figure S4C : No. of Recurrent mutations by cancer type <----
 rm(list = ls()[!ls() %in% c("dataDF", "fullData", "DC_theme_generator")])
 gc()
 
@@ -123,9 +158,22 @@ Stats <- reshape2::melt(Stats[,c("tissue","Recurrent","Unique")])
 colnames(Stats)[2:3] <- c("Type","count")
 Stats$Type <- factor(Stats$Type,levels=c("Unique","Recurrent"))
 
+SampleDF <- unique(dataDF[,.(Sample.name, Primary.site)])
+StatsSample <- SampleDF[,.(.N), by = Primary.site]
+colnames(StatsSample) <- c("tissue","count")
+StatsSample[, tissue := gsub("_", " ", tissue)]
+
+Stats.bak$sampleCount <- StatsSample$count[match(x = Stats.bak$tissue,table = StatsSample$tissue)]
+
+# Stats.bak[,percent:=Recurrent/All]
+# View(Stats.bak[sampleCount>100,])
+
+Stats.bak[,tissue := paste0(tissue, " (",sampleCount,")")]
+Stats.bak[,sampleCount :=NULL]
+
 write.table(
   Stats.bak,
-  file = "~/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Figures/panels from R/S2 B.csv",
+  file = "~/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Figures/panels from R/S4 C.csv",
   sep = ",",
   quote = F,
   row.names = F,
@@ -135,37 +183,38 @@ write.table(
 if(!any(grepl("DC_theme_generator",x = ls()))){
   source('https://raw.githubusercontent.com/dchakro/ggplot_themes/master/DC_theme_generator.R')  
 }
-customtheme <- DC_theme_generator(type = 'L',
-                                  legend = 'F',
-                                  ticks = 'out',
-                                  x.axis.angle = 45,
-                                  hjust = 1,
-                                  vjust = 1,
-                                  fontsize.cex = 1.2,
-                                  ax.fontstyle = "italic")
-options(scipen=100000)
+# customtheme <- DC_theme_generator(type = 'L',
+#                                   legend = 'F',
+#                                   ticks = 'out',
+#                                   x.axis.angle = 45,
+#                                   hjust = 1,
+#                                   vjust = 1,
+#                                   fontsize.cex = 1.2,
+#                                   ax.fontstyle = "italic")
+# options(scipen=100000)
+# 
+# ggplot(data = Stats, aes(x = reorder(tissue,-count),y = count,
+#                          fill=Type))+
+#   geom_col(width=0.75, position = "stack")+
+#   xlab("Tissue of origin of cancer")+
+#   ylab("Mutations reported\nin the database")+
+#   customtheme +
+#   scale_y_continuous(expand = c(0, 0))+
+#   scale_fill_manual(values = c("#c7c7c7","#000000"),
+#                     name="Type of \nMutation")+
+#   theme(legend.position="right",
+#         legend.text=element_text(family="serif",
+#                                  size=11),
+#         legend.key.size = unit(0.5, "lines"))
+# 
+# 
+# ggsave(
+#   "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Figures/panels from R/S4 C_1.pdf",
+#   width = 8,
+#   height = 5,
+#   device = cairo_pdf
+# )
 
-ggplot(data = Stats, aes(x = reorder(tissue,-count),y = count,
-                         fill=Type))+
-  geom_col(width=0.75, position = "stack")+
-  xlab("Tissue of origin of cancer")+
-  ylab("Mutations reported\nin the database")+
-  customtheme +
-  scale_y_continuous(expand = c(0, 0))+
-  scale_fill_manual(values = c("#c7c7c7","#000000"),
-                    name="Type of \nMutation")+
-  theme(legend.position="right",
-        legend.text=element_text(family="serif",
-                                 size=11),
-        legend.key.size = unit(0.5, "lines"))
-
-
-ggsave(
-  "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Figures/panels from R/S2 B.pdf",
-  width = 8,
-  height = 5,
-  device = cairo_pdf
-)
 
 ggplot(data = Stats[Stats$Type!="Unique",], aes(x = reorder(tissue,-count),y = count,
                          fill=Type))+
@@ -182,7 +231,7 @@ ggplot(data = Stats[Stats$Type!="Unique",], aes(x = reorder(tissue,-count),y = c
         legend.key.size = unit(0.5, "lines"))
 
 ggsave(
-  "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Figures/panels from R/S2 B_2.pdf",
+  "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Figures/panels from R/S4 A_2.pdf",
   width = 8,
   height = 5,
   device = cairo_pdf
@@ -210,14 +259,14 @@ geom_hline(yintercept = mean(Stats.bak$Recurrent / Stats.bak$All, na.rm=T),
         legend.key.size = unit(0.5, "lines"))
 
 ggsave(
-  "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Figures/panels from R/S2 B_3.pdf",
+  "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Figures/panels from R/S4 C_3.pdf",
   width = 8,
   height = 5,
   device = cairo_pdf
 )
 
 
-# ---> Figure S2 C : TMB plot <----
+# ---> Figure S4 D : TMB plot <----
 rm(list = ls()[! ls() %in% c("dataDF", "fullData", "DC_theme_generator")])
 gc()
 
@@ -233,6 +282,11 @@ Stats[, tissue := gsub("_", " ", tissue)]
 Stats$tissue[is.na(Stats$tissue)] <- "NS" # setting NA as Not specified
 Stats$tissue <- factor(Stats$tissue)
 Stats$tissue <- relevel(Stats$tissue,"NS")
+
+Stats <- Stats[count>1,]
+summary(Stats$count)
+IQR(Stats$count)
+View(Stats[,(mean(count)),by=tissue])
 
 if(!any(grepl("DC_theme_generator",x = ls()))){
   source('https://raw.githubusercontent.com/dchakro/ggplot_themes/master/DC_theme_generator.R')  
@@ -268,7 +322,7 @@ ggplot(data = Stats, aes(y=count,
 # )
 
 ggsave(
-  "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Figures/panels from R/S2 C.pdf",
+  "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Figures/panels from R/S4 D.pdf",
   width = 8,
   height = 5.5,
   device = cairo_pdf
