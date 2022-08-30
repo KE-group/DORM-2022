@@ -17,7 +17,7 @@ df_full <- df_full[,1:4]
 df_full[, MutID:=paste0(Gene,"=",Mutation)]
 
 # -----------
-# Plotting
+# Generating data for Plotting
 N=1000
 selection <- data.frame(MutID=df_gw$MutID[1:N])
 selection$gw <- df_gw$counts[match(x = selection$MutID, table = df_gw$MutID)]
@@ -54,16 +54,18 @@ get_density <- function(x, y, ...) {
 
 selection[,density := get_density(x = gw, y = targ, n = N)]
 
+#-----------
+#  Plotting
 library(ggplot2)
 source('https://raw.githubusercontent.com/dchakro/ggplot_themes/master/DC_theme_generator.R')
 customtheme <- DC_theme_generator(type = "L",legend = F)
 ggplot(data = selection, aes(x=gw, y=targ, color=density))+
-  geom_point(alpha=0.75)+
+  geom_point(alpha=0.75,size=3)+
   xlab("Share in genome-wide screens (%)")+
   ylab("Share in targeted screens (%)")+
   scale_color_viridis_c(option = "plasma")+
   geom_abline(slope = 1,intercept = 0)+
-  scale_x_continuous(expand=c(0,0),limits = c(0,5))+
+  scale_x_continuous(expand=c(0,0),limits = c(0,16))+
   scale_y_continuous(expand=c(0,0),limits = c(0,16))+
   ggtitle(paste0("Top ",N, " Mutations"))+
   customtheme
