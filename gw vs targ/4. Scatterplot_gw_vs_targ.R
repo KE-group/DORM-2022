@@ -22,17 +22,19 @@ N=1000
 selection <- data.frame(MutID=df_gw$MutID[1:N])
 selection$gw <- df_gw$counts[match(x = selection$MutID, table = df_gw$MutID)]
 selection$full <- df_full$counts[match(x = selection$MutID, table = df_full$MutID)]
+selection <- as.data.table(selection)
 
 # # Removing genome-wide data from full and renaming to targeted seq
-selection <- as.data.table(selection)
-selection$full <- selection$full-ifelse(is.na(selection$gw),0,selection$gw)
+# selection$full <- selection$full-ifelse(is.na(selection$gw),0,selection$gw) # creates problems with mutations like (ZNF814 A337V)
+
 setnames(selection,"full","targ_count")
 setnames(selection,"gw","gw_count")
 
 # Converting to % of samples
 selection[, gw := ((gw_count / 36224) * 100)]
-# selection[, full := ((full / 364241) * 100)]
-selection[, targ := ((targ_count / 328017) * 100)]
+# Full count = 364241
+# selection[, targ := ((targ_count / 328017) * 100)]
+selection[, targ := ((targ_count / 364241) * 100)]
 
 library(MASS)
 get_density <- function(x, y, ...) {
