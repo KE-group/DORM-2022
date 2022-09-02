@@ -20,6 +20,12 @@ rm(list=ls());gc()
 # 
 # keep <- c("Gene.name","Mutation.AA","Sample.name","Primary.site")
 # fullData <- muts[, keep, with=F]
+# 
+# # checking number of unique samples vs unique sample-tissue pairs
+# # dim(fullData[,.(.N), by = Sample.name]) # 35462
+# # dim(fullData[,.(.N), by = .(Sample.name, Primary.site)]) # 36 224
+# # dim(unique(muts[,.(Sample.name, Primary.site)])) # 36 224
+# 
 # saveRDS.gz(fullData, file="/Users/deepankar/OneDrive - O365 Turun yliopisto/ExtraWorkSync/Klaus-Lab-Data/Big Data/COSMIC/v95/Full_Database/AllMuts_fullData.RDS")
 # 
 # output <- muts[,.(.N), by = mutID]
@@ -270,9 +276,14 @@ ggsave(
 rm(list = ls()[! ls() %in% c("dataDF", "fullData", "DC_theme_generator")])
 gc()
 
-# Stats <- dataDF[,.(.N), by = Sample.name]
-Stats <- fullData[,.(.N), by = Sample.name]
-colnames(Stats) <- c("Sample.name","count")
+# # Demonstrating that there are several studies sharing the same sample name (usually numeric)
+# fullData[,.(.N), by = .(Sample.name)] # 35 462
+# tmp <- fullData[,.(.N), by = .(Sample.name, Primary.site)] # 36 224
+# View(tmp[ Sample.name %in% tmp$Sample.name[which(duplicated(tmp$Sample.name))]]) # 1132 sa,åöes
+
+# Stats <- fullData[,.(.N), by = Sample.name] # disabled as studies share sample name (1132 samples)
+Stats <- fullData[,.(.N), by = .(Sample.name, Primary.site)]
+colnames(Stats)[3] <- "count"
 setorder(Stats, -count)
 Sample_Tissue_Map <- unique(dataDF[,.(Sample.name, Primary.site)])
 # print("Number of samples by tissue")
@@ -283,10 +294,10 @@ Stats$tissue[is.na(Stats$tissue)] <- "NS" # setting NA as Not specified
 Stats$tissue <- factor(Stats$tissue)
 Stats$tissue <- relevel(Stats$tissue,"NS")
 
-Stats <- Stats[count>1,]
+# Stats <- Stats[count>1,] # only including samples with recurrent mutations
 summary(Stats$count)
 IQR(Stats$count)
-View(Stats[,(mean(count)),by=tissue])
+# View(Stats[,(mean(count)),by=tissue])
 
 if(!any(grepl("DC_theme_generator",x = ls()))){
   source('https://raw.githubusercontent.com/dchakro/ggplot_themes/master/DC_theme_generator.R')  
@@ -308,11 +319,12 @@ ggplot(data = Stats, aes(y=count,
               height = 0,
               size=1.5,
               width=0.3)+
-  scale_y_continuous()+
+  scale_y_continuous(trans = "log10")+
   xlab("Tissue of origin of cancer")+
   ylab("Number of mutations\nper sample")+
-  ggtitle(paste("(n = ",length(Stats$Sample.name),")"))+
-  customtheme 
+  ggtitle(paste("(n = ",length(Stats$Sample.name),"samples)"))+
+  stat_summary(fun=mean, geom="crossbar", color="red",alpha=0.5)+
+  customtheme
 
 # ggsave(
 #   "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/Hotspot Explorer/Data/Barplots/TMB.pdf",
