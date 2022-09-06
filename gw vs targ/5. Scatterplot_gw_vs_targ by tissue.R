@@ -9,6 +9,7 @@ library(data.table)
 rm(list=ls()); gc()
 
 df_gw <- readRDS("/Users/deepankar/OneDrive - O365 Turun yliopisto/ExtraWorkSync/Klaus-Lab-Data/Big Data/COSMIC/v95/Full_Database/20220117.FrequencyByMutation.RDS")
+df_gw[,Mutation := gsub("_", "-", Mutation)]
 
 # nCT= sample Count By Cancer Type
 nCT <- readRDS("/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Data/COSMIC_v95_R_DT/sampleCountByCancerType.RDS")
@@ -22,8 +23,10 @@ for(j in 3:ncol(df_gw)){
 }
 df_gw <- as.data.table(df_gw)
 df_gw[, MutID:=paste0(Gene,"=",Mutation)]
+nCT_gw <- nCT
 
 df_full <- readRDS("/Users/deepankar/OneDrive - O365 Turun yliopisto/ExtraWorkSync/Klaus-Lab-Data/Big Data/COSMIC/v95/targeted_and_wgs/20220606.FrequencyByMutation.RDS")
+df_full[,Mutation := gsub("_", "-", Mutation)]
 # nCT= sample Count By Cancer Type
 nCT <- readRDS("/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Data/COSMIC_v95_targ_and_gw/sampleCountByCancerType.RDS")
 nCT[,tissue := gsub(" ", "_", tissue)]
