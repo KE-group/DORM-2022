@@ -21,7 +21,6 @@ for(j in 3:ncol(df_gw)){
   df_gw[,j] <- (df_gw[,j]*100)/nCT$count[nCT$tissue==colnames(df_gw)[j]]
 }
 df_gw <- as.data.table(df_gw)
-setorder(df_gw,-skin)
 df_gw[, MutID:=paste0(Gene,"=",Mutation)]
 
 df_full <- readRDS("/Users/deepankar/OneDrive - O365 Turun yliopisto/ExtraWorkSync/Klaus-Lab-Data/Big Data/COSMIC/v95/targeted_and_wgs/20220606.FrequencyByMutation.RDS")
@@ -36,7 +35,6 @@ for(j in 3:ncol(df_full)){
   df_full[,j] <- (df_full[,j]*100)/nCT$count[nCT$tissue==colnames(df_full)[j]]
 }
 df_full <- as.data.table(df_full)
-setorder(df_full,-skin)
 
 df_full[, MutID:=paste0(Gene,"=",Mutation)]
 setnames(nCT,"count","full")
