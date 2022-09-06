@@ -15,6 +15,7 @@ nCT <- readRDS("/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manus
 nCT[,tissue := gsub(" ", "_", tissue)]
 df_gw[, c("counts","Frequency") := NULL]
 
+df_gw_bak <- df_gw
 df_gw <- as.data.frame(df_gw)
 for(j in 3:ncol(df_gw)){
   df_gw[,j] <- (df_gw[,j]*100)/nCT$count[nCT$tissue==colnames(df_gw)[j]]
@@ -29,6 +30,7 @@ nCT <- readRDS("/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manus
 nCT[,tissue := gsub(" ", "_", tissue)]
 df_full[, c("counts","Frequency") := NULL]
 
+df_full_bak <- df_full
 df_full <- as.data.frame(df_full)
 for(j in 3:ncol(df_full)){
   df_full[,j] <- (df_full[,j]*100)/nCT$count[nCT$tissue==colnames(df_full)[j]]
@@ -37,11 +39,14 @@ df_full <- as.data.table(df_full)
 setorder(df_full,-skin)
 
 df_full[, MutID:=paste0(Gene,"=",Mutation)]
+setnames(nCT,"count","full")
+nCT$gw <- nCT_gw$count[match(nCT$tissue,nCT_gw$tissue)]
+rm(nCT_gw)
 
 # -----------
 # Generating data for Plotting
 N=1000
-selection <- data.frame(MutID = df_gw$MutID[1:N])
+selection <- data.frame(MutID = df_gw$MutID[1:N]) # check what this line does ????
 long_gw <- melt(df_gw[1:N, ], id.vars = c("MutID", "Gene", "Mutation"))
 long_full <-
   melt(df_full[match(x = selection$MutID, table = df_full$MutID)], id.vars = c("MutID", "Gene", "Mutation"))
