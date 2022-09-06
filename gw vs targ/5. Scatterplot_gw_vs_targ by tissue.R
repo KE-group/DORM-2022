@@ -45,6 +45,20 @@ nCT$gw <- nCT_gw$count[match(nCT$tissue,nCT_gw$tissue)]
 rm(nCT_gw)
 
 # -----------
+# Reading color scheme
+colors_data <- data.table::fread(file = "color_vector.tsv")
+# colors_data[,tissue:=gsub(" ","_",tissue)]
+colors <- colors_data$color
+names(colors) <- colors_data$tissue
+
+# troubleshooting colors
+# write(levels(as.factor(selection$tissue)),ncolumns = 1,file = "~/Desktop/tmp.txt")
+# '%nin%'=Negate("%in%")
+# tmp <- unique(selection$tissue) 
+# tmp[tmp%nin% names(colors)]
+
+
+# ---------
 # Generating data for Plotting
 N=1000
 selection <- data.frame(MutID = df_gw$MutID[1:N]) # check what this line does ????
@@ -79,11 +93,6 @@ rm(tmp_data)
 
 #-----------
 #  Plotting
-# colors <- viridis::turbo(length(unique(selection$tissue)))
-colors_data <- data.table::fread(file = "color_vector.tsv")
-colors <- colors_data$color
-names(colors) <- colors_data$tissue
-  
 library(ggplot2)
 source('https://raw.githubusercontent.com/dchakro/ggplot_themes/master/DC_theme_generator.R')
 customtheme <- DC_theme_generator(type = "L",legend = F)
@@ -190,12 +199,12 @@ p <- plot_ly(
   text =  ~ paste("Mutant: ", paste0(Mutant," / ",tissue),
                   "\n(Full): ",
                   paste0(formatC(signif(full, digits = 3), digits = 3, format = "fg"),
-                         " % (n=",
+                         " % (n = ",
                          full_count,
                          ")"),
                   "\n (GW): ", 
                   paste0(formatC(signif(gw, digits = 3), digits = 3, format = "fg"), 
-                         " % (n=", 
+                         " % (n = ", 
                          gw_count, 
                          ")"))) %>% # write counts
   layout(shapes = list(list(
