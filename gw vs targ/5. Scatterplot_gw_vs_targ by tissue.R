@@ -60,7 +60,7 @@ names(colors) <- colors_data$tissue
 
 # ---------
 # Generating data for Plotting
-N=1000
+N=500
 selection <- data.frame(MutID = df_gw$MutID[1:N]) # check what this line does ????
 long_gw <- melt(df_gw[1:N, ], id.vars = c("MutID", "Gene", "Mutation"))
 long_full <-
@@ -89,6 +89,11 @@ selection$tissue <- gsub("\\s+"," ",tmp_data$tissue)
 selection$tissue <- gsub("\\s$","",selection$tissue)
 rm(tmp_data)
 
+source("/Users/deepankar/OneDrive - O365 Turun yliopisto/Git/Gitlab.DC/Utilities/SignedFoldChange.R")
+selection[,size:=FoldChange(gw_count,full_count)]
+selection$size[selection$size == Inf] <- 0
+summary(selection$size)
+
 # levels(as.factor(selection$tissue))
 
 #-----------
@@ -99,12 +104,13 @@ customtheme <- DC_theme_generator(type = "L",legend = F)
 ggplot(data = selection, aes(x=gw, y=full, color=tissue))+
   geom_smooth(method = "lm",formula = y ~ x, aes(group=1),se = F,na.rm = T,color="#BE0000")+
   geom_abline(slope = 1,intercept = 0, linetype="dotted")+
-  geom_point(alpha=0.75,size=1.5)+
+  geom_point(alpha=0.7,aes(size=size))+
   xlab("Share in genome-wide screens (%)")+
   ylab("Share in complete data (%)")+
   scale_color_manual(values=colors)+
   scale_x_continuous(expand=c(0,0),limits = c(0,100))+
   scale_y_continuous(expand=c(0,0),limits = c(0,100))+
+  scale_size(range=c(1,10))+
   ggtitle(paste0("Top ",N, " Mutations"))+
   customtheme
 
@@ -185,12 +191,21 @@ selection$full_count <-
     )
   )
 
+selection$Gene <- unlist(lapply(strsplit(selection$Mutant," "), `[[`, 1))
+# selection$rank <- match(x=gsub(" ","=",selection$Mutant),table = df_gw$MutID)
+# # Adjusting the size of biggest dot
+# selection$size <- tmp$V1[match(x = selection$Gene, table=tmp$Gene)]
+
 # paste0(formatC(signif(selection$gw,digits=3), digits=3,format="fg")," %")
+
+
+lr <- lm(gw ~ full, selection)
 
 library(plotly)
 p <- plot_ly(
   data=selection,
-  alpha = 0.8,
+  size = ~size,
+  sizes = c(8, 50),
   x =  ~ gw,
   y =  ~ full,
   color = ~tissue,
@@ -217,7 +232,7 @@ p <- plot_ly(
     yref = "y",
     line = list(color = "black", dash="dot")
   ))) %>%
-  add_markers(marker = list(size = 10)) %>%
+  add_markers(marker=list(opacity = 0.5, sizemode = 'diameter')) %>%
   layout(
     title = paste0("<b>Top ",N, " Mutations</b>"),
     xaxis = list(title = paste0("<b>Share in genome-wide screens (%)</b>")),
@@ -226,21 +241,10 @@ p <- plot_ly(
 
 # p %>% add_trace(x = ~full, y = fitted(lm(selection$gw~selection$full), mode = "lines"))
   
-fv <- fitted(lm(selection$gw~selection$full))
+# fv <- fitted(lm(selection$gw~selection$full))
 
-p %>%  add_lines(
-  x = selection$gw,
-  y = fv,
-  group = 1,
-  name = "",
-  line = list(
-    color = "#BE0000",
-    width = 0.5,
-    dash = "dot"
-  )
-)
+# hide_legend(p)
 
-hide_legend(p)
 htmlwidgets::saveWidget(
   widget = hide_legend(p),
   file = paste0("gg_Scatter_tissue_top", N, ".html"),

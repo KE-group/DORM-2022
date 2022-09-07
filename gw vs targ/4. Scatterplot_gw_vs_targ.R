@@ -56,19 +56,25 @@ get_density <- function(x, y, ...) {
 
 selection[,density := get_density(x = gw, y = targ, n = N)]
 
+source("/Users/deepankar/OneDrive - O365 Turun yliopisto/Git/Gitlab.DC/Utilities/SignedFoldChange.R")
+selection[,size:=FoldChange(gw_count,full_count)]
+selection$size[selection$size == Inf] <- 0
+summary(selection$size)
+
 #-----------
 #  Plotting
 library(ggplot2)
 source('https://raw.githubusercontent.com/dchakro/ggplot_themes/master/DC_theme_generator.R')
 customtheme <- DC_theme_generator(type = "L",legend = F)
 ggplot(data = selection, aes(x=gw, y=targ, color=density))+
-  geom_point(alpha=0.75,size=1)+
+  geom_point(alpha=0.7,aes(size=size))+
   xlab("Share in genome-wide screens (%)")+
   ylab("Share in targeted screens (%)")+
   scale_color_viridis_c(option = "plasma")+
   geom_abline(slope = 1,intercept = 0)+
   scale_x_continuous(expand=c(0,0),limits = c(0,16))+
   scale_y_continuous(expand=c(0,0),limits = c(0,16))+
+  scale_size(range=c(1,10))+
   ggtitle(paste0("Top ",N, " Mutations"))+
   customtheme
 
@@ -84,6 +90,8 @@ p <- plot_ly(
   alpha = 0.8,
   x =  ~ gw,
   y =  ~ targ,
+  size = ~size,
+  sizes = c(8, 50),
   color = ~density,
   colors = "plasma",
   mode = "text",
@@ -100,7 +108,7 @@ p <- plot_ly(
     yref = "y",
     line = list(color = "black")
   ))) %>%
-  add_markers(marker = list(size = 10)) %>%
+  add_markers(marker=list(opacity = 0.5, sizemode = 'diameter')) %>%
   layout(
     title = paste0("<b>Top ",N, " Mutations</b>"),
     xaxis = list(title = paste0("<b>Share in genome-wide screens (%)</b>")),
