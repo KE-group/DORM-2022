@@ -18,7 +18,7 @@ df_full[, MutID:=paste0(Gene,"=",Mutation)]
 
 # -----------
 # Generating data for Plotting
-N=5000
+N=100
 selection <- data.frame(MutID=df_gw$MutID[1:N])
 selection$gw <- df_gw$counts[match(x = selection$MutID, table = df_gw$MutID)]
 selection$full <- df_full$counts[match(x = selection$MutID, table = df_full$MutID)]
@@ -57,7 +57,7 @@ get_density <- function(x, y, ...) {
 selection[,density := get_density(x = gw, y = targ, n = N)]
 
 source("/Users/deepankar/OneDrive - O365 Turun yliopisto/Git/Gitlab.DC/Utilities/SignedFoldChange.R")
-selection[,size:=FoldChange(gw_count,full_count)]
+selection[,size:=FoldChange(gw_count,targ_count)]
 selection$size[selection$size == Inf] <- 0
 summary(selection$size)
 
@@ -96,17 +96,17 @@ p <- plot_ly(
   colors = "plasma",
   mode = "text",
   text =  ~ paste("Cell Line: ", gsub("="," ", MutID),
-                  "\nCount (G) = ", gw_count,
-                  "\nCount (T) = ", targ_count)) %>%
+                  "\nCount (T) = ", targ_count,
+                  "\nCount (G) = ", gw_count)) %>%
   layout(shapes = list(list(
-    type = "line", 
+    type = "line",
     x0 = 0, 
     x1 = ~max(selection$gw, selection$targ), 
     xref = "x",
     y0 = 0, 
     y1 = ~max(selection$gw, selection$targ),
     yref = "y",
-    line = list(color = "black")
+    line = list(color = "black", dash="dot")
   ))) %>%
   add_markers(marker=list(opacity = 0.5, sizemode = 'diameter')) %>%
   layout(
@@ -114,7 +114,7 @@ p <- plot_ly(
     xaxis = list(title = paste0("<b>Share in genome-wide screens (%)</b>")),
     yaxis = list(title = paste0("<b>Share in targeted screens (%)</b>"))
   )
-hide_colorbar(p)
+# hide_colorbar(p)
 htmlwidgets::saveWidget(
   widget = hide_colorbar(p),
   file = paste0("gg_Scatter_top", N, ".html"),
