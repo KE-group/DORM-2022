@@ -97,7 +97,7 @@ names(colors) <- colors_data$tissue
 
 # ---------
 # Generating data for Plotting
-N=100
+N=500
 selection <- data.frame(MutID = df_gw$MutID[1:N])
 long_gw <- melt(df_gw[1:N, ], id.vars = c("MutID", "Gene", "Mutation"))
 long_full <-
@@ -178,7 +178,7 @@ library(ggplot2)
 source('https://raw.githubusercontent.com/dchakro/ggplot_themes/master/DC_theme_generator.R')
 customtheme <- DC_theme_generator(type = "L",legend = F)
 ggplot(data = selection, aes(x=gw, y=full, color=tissue))+
-  geom_smooth(method = "lm",formula = y ~ x, aes(group=1),se = F,na.rm = T,color="#BE0000")+
+  # geom_smooth(method = "lm", aes(group=1),se = F,na.rm = T,color="#BE0000")+
   geom_abline(slope = 1,intercept = 0, linetype="dotted")+
   geom_point(alpha=0.7,aes(size=size))+
   xlab("Share in genome-wide screens (%)")+
@@ -187,7 +187,7 @@ ggplot(data = selection, aes(x=gw, y=full, color=tissue))+
   scale_x_continuous(expand=c(0,0),limits = c(0,100))+
   scale_y_continuous(expand=c(0,0),limits = c(0,100))+
   scale_size(range=c(1,10))+
-  ggtitle(paste0("Top ",N, " Mutations"))+
+  ggtitle(paste0("Most recurrent mutations (N: 1 - ",N, ")"))+
   customtheme
 
 ggsave(
@@ -203,7 +203,7 @@ library(plotly)
 p <- plot_ly(
   data=selection,
   size = ~size,
-  sizes = c(8, 50),
+  sizes = c(8, 40),
   x =  ~ gw,
   y =  ~ full,
   color = ~tissue,
@@ -232,7 +232,7 @@ p <- plot_ly(
   ))) %>%
   add_markers(marker=list(opacity = 0.5, sizemode = 'diameter')) %>%
   layout(
-    title = paste0("<b>Top ",N, " Mutations</b>"),
+    title = paste0("<b>Most recurrent mutations (N: 1 - ",N, ")</b>"),
     xaxis = list(title = paste0("<b>Share in genome-wide screens (%)</b>")),
     yaxis = list(title = paste0("<b>Share in combined screen data (%)</b>"))
   )
