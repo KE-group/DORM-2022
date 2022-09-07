@@ -1,7 +1,3 @@
-rm(list = ls())
-gc()
-library(data.table)
-
 setwd("/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Data/adding Targ to genomewide")
 library(data.table)
 #-----------------------
@@ -18,7 +14,7 @@ df_full[, MutID:=paste0(Gene,"=",Mutation)]
 
 # -----------
 # Generating data for Plotting
-N=100
+N=1000
 selection <- data.frame(MutID=df_gw$MutID[1:N])
 selection$gw <- df_gw$counts[match(x = selection$MutID, table = df_gw$MutID)]
 selection$full <- df_full$counts[match(x = selection$MutID, table = df_full$MutID)]
@@ -58,7 +54,9 @@ selection[,density := get_density(x = gw, y = targ, n = N)]
 
 source("/Users/deepankar/OneDrive - O365 Turun yliopisto/Git/Gitlab.DC/Utilities/SignedFoldChange.R")
 selection[,size:=FoldChange(gw_count,targ_count)]
+summary(selection$size)
 selection$size[selection$size == Inf] <- 0
+selection$size[is.na(selection$size)] <- 0
 summary(selection$size)
 
 #-----------

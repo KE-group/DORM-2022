@@ -1,13 +1,50 @@
-rm(list = ls())
-gc()
-library(data.table)
-
 setwd("/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Data/adding Targ to genomewide")
 library(data.table)
 #-----------------------
-# Reading data
+# Defining funcitons
 rm(list=ls()); gc()
 
+findCount_gw <- function(mutationID = NULL,
+                         sampleSet = NULL) {
+  tmp_data <- unlist(stringi::stri_split_fixed(str = mutationID, pattern = "_"))
+  Mutant <- tmp_data[1]
+  Tissue <- paste0(tmp_data[-1], collapse = "_")
+  if (sampleSet == "genome-wide") {
+    tryCatch(
+      expr = {
+        return(df_gw_bak[MutID == Mutant, get(Tissue)])
+        
+      },
+      error = function (e) {
+        message(paste("No entry found for", mutationID))
+        # Actions to take
+        return(NA)
+      },
+      finally = {
+        # print("Great Success!!")
+      }
+    )
+  } else if (sampleSet == "full-data") {
+    tryCatch(
+      expr = {
+        return(df_full_bak[MutID == Mutant, get(Tissue)])
+        
+      },
+      error = function (e) {
+        message(paste("No entry found for", mutationID))
+        # Actions to take
+        return(NA)
+      },
+      finally = {
+        # print("Great Success!!")
+      }
+    )
+  } else {
+    error("Acceptable data sets (param #2): genome-wide / full-data")
+  }
+}
+
+# Reading data
 df_gw <- readRDS("/Users/deepankar/OneDrive - O365 Turun yliopisto/ExtraWorkSync/Klaus-Lab-Data/Big Data/COSMIC/v95/Full_Database/20220117.FrequencyByMutation.RDS")
 df_gw[,Mutation := gsub("_", "-", Mutation)]
 
@@ -60,8 +97,8 @@ names(colors) <- colors_data$tissue
 
 # ---------
 # Generating data for Plotting
-N=500
-selection <- data.frame(MutID = df_gw$MutID[1:N]) # check what this line does ????
+N=100
+selection <- data.frame(MutID = df_gw$MutID[1:N])
 long_gw <- melt(df_gw[1:N, ], id.vars = c("MutID", "Gene", "Mutation"))
 long_full <-
   melt(df_full[match(x = selection$MutID, table = df_full$MutID)], id.vars = c("MutID", "Gene", "Mutation"))
@@ -89,80 +126,8 @@ selection$tissue <- gsub("\\s+"," ",tmp_data$tissue)
 selection$tissue <- gsub("\\s$","",selection$tissue)
 rm(tmp_data)
 
-source("/Users/deepankar/OneDrive - O365 Turun yliopisto/Git/Gitlab.DC/Utilities/SignedFoldChange.R")
-selection[,size:=FoldChange(gw_count,full_count)]
-selection$size[selection$size == Inf] <- 0
-summary(selection$size)
-
-# levels(as.factor(selection$tissue))
-
-#-----------
-#  Plotting
-library(ggplot2)
-source('https://raw.githubusercontent.com/dchakro/ggplot_themes/master/DC_theme_generator.R')
-customtheme <- DC_theme_generator(type = "L",legend = F)
-ggplot(data = selection, aes(x=gw, y=full, color=tissue))+
-  geom_smooth(method = "lm",formula = y ~ x, aes(group=1),se = F,na.rm = T,color="#BE0000")+
-  geom_abline(slope = 1,intercept = 0, linetype="dotted")+
-  geom_point(alpha=0.7,aes(size=size))+
-  xlab("Share in genome-wide screens (%)")+
-  ylab("Share in complete data (%)")+
-  scale_color_manual(values=colors)+
-  scale_x_continuous(expand=c(0,0),limits = c(0,100))+
-  scale_y_continuous(expand=c(0,0),limits = c(0,100))+
-  scale_size(range=c(1,10))+
-  ggtitle(paste0("Top ",N, " Mutations"))+
-  customtheme
-
-ggsave(
-  filename = paste0("gg_Scatter_tissue_top", N, ".pdf"),
-  height = 5,
-  width = 5
-)
-
-# #---- Plotly figure
 df_gw_bak[, MutID:=paste0(Gene,"=",Mutation)]
 df_full_bak[, MutID:=paste0(Gene,"=",Mutation)]
-
-findCount_gw <- function(mutationID = NULL,
-                         sampleSet = NULL) {
-  tmp_data <- unlist(stringi::stri_split_fixed(str = mutationID, pattern = "_"))
-  Mutant <- tmp_data[1]
-  Tissue <- paste0(tmp_data[-1], collapse = "_")
-  if (sampleSet == "genome-wide") {
-    tryCatch(
-      expr = {
-        return(df_gw_bak[MutID == Mutant, get(Tissue)])
-        
-      },
-      error = function (e) {
-        message(paste("No entry found for", mutationID))
-        # Actions to take
-        return(NA)
-      },
-      finally = {
-        # print("Great Success!!")
-      }
-    )
-  } else if (sampleSet == "full-data") {
-    tryCatch(
-      expr = {
-        return(df_full_bak[MutID == Mutant, get(Tissue)])
-        
-      },
-      error = function (e) {
-        message(paste("No entry found for", mutationID))
-        # Actions to take
-        return(NA)
-      },
-      finally = {
-        # print("Great Success!!")
-      }
-    )
-  } else {
-    error("Acceptable data sets (param #2): genome-wide / full-data")
-  }
-}
 
 # Single-core
 # unlist(lapply(
@@ -198,7 +163,40 @@ selection$Gene <- unlist(lapply(strsplit(selection$Mutant," "), `[[`, 1))
 
 # paste0(formatC(signif(selection$gw,digits=3), digits=3,format="fg")," %")
 
+source("/Users/deepankar/OneDrive - O365 Turun yliopisto/Git/Gitlab.DC/Utilities/SignedFoldChange.R")
+selection[,size:=FoldChange(gw_count,full_count)]
+summary(selection$size)
+selection$size[selection$size == Inf] <- 0
+selection$size[is.na(selection$size)] <- 0
+summary(selection$size)
 
+# levels(as.factor(selection$tissue))
+
+#-----------
+#  Plotting
+library(ggplot2)
+source('https://raw.githubusercontent.com/dchakro/ggplot_themes/master/DC_theme_generator.R')
+customtheme <- DC_theme_generator(type = "L",legend = F)
+ggplot(data = selection, aes(x=gw, y=full, color=tissue))+
+  geom_smooth(method = "lm",formula = y ~ x, aes(group=1),se = F,na.rm = T,color="#BE0000")+
+  geom_abline(slope = 1,intercept = 0, linetype="dotted")+
+  geom_point(alpha=0.7,aes(size=size))+
+  xlab("Share in genome-wide screens (%)")+
+  ylab("Share in complete data (%)")+
+  scale_color_manual(values=colors)+
+  scale_x_continuous(expand=c(0,0),limits = c(0,100))+
+  scale_y_continuous(expand=c(0,0),limits = c(0,100))+
+  scale_size(range=c(1,10))+
+  ggtitle(paste0("Top ",N, " Mutations"))+
+  customtheme
+
+ggsave(
+  filename = paste0("gg_Scatter_tissue_top", N, ".pdf"),
+  height = 5,
+  width = 5
+)
+
+# #---- Plotly figure
 lr <- lm(gw ~ full, selection)
 
 library(plotly)
