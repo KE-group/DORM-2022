@@ -14,7 +14,7 @@ df_full[, MutID:=paste0(Gene,"=",Mutation)]
 
 # -----------
 # Generating data for Plotting
-N=1000
+N=5000
 selection <- data.frame(MutID=df_gw$MutID[1:N])
 selection$gw <- df_gw$counts[match(x = selection$MutID, table = df_gw$MutID)]
 selection$full <- df_full$counts[match(x = selection$MutID, table = df_full$MutID)]
@@ -67,7 +67,7 @@ customtheme <- DC_theme_generator(type = "L",legend = F)
 ggplot(data = selection, aes(x=gw, y=targ, color=density))+
   geom_point(alpha=0.7,aes(size=size))+
   xlab("Share in genome-wide screens (%)")+
-  ylab("Share in targeted screens (%)")+
+  ylab("Share in complete data (%)")+
   scale_color_viridis_c(option = "plasma")+
   geom_abline(slope = 1,intercept = 0)+
   scale_x_continuous(expand=c(0,0),limits = c(0,16))+
@@ -110,7 +110,7 @@ p <- plot_ly(
   layout(
     title = paste0("<b>Top ",N, " Mutations</b>"),
     xaxis = list(title = paste0("<b>Share in genome-wide screens (%)</b>")),
-    yaxis = list(title = paste0("<b>Share in targeted screens (%)</b>"))
+    yaxis = list(title = paste0("<b>Share in complete data (%)</b>"))
   )
 # hide_colorbar(p)
 htmlwidgets::saveWidget(
