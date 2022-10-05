@@ -120,18 +120,26 @@ saveScatterplots <- function(fileName){
     # scale_color_brewer(palette = color_palette,"Histology")+
     scale_colour_viridis_d(option = "turbo", "Histology", direction = -1)+
     scale_size("N (full) / size")+
-    scale_alpha("N (gw) / opacity",range = c(0.3, 1))
+    scale_alpha("N (gw) / opacity",range = c(0.3, 1))+
+    coord_cartesian(clip = 'off') # this turns off clipping points on x & y axis
   
   scatterPlot=main_plot+customtheme
   legend=ggpubr::as_ggplot(ggpubr::get_legend(main_plot))
   
   # Fix plot size and legend takes rest of the space.
   # Plot fixed size, legend dynamic size.
+  # export <-  scatterPlot + 
+  #   legend + 
+  #   plot_layout(nrow = 2, ncol=1,
+  #               widths =  unit(c(9, 1), c('cm', 'null')),
+  #               heights = unit(c(9, 1), c('cm', 'null')))
+  
   export <-  scatterPlot + 
     legend + 
-    plot_layout(nrow = 2, ncol=1,
+    plot_layout(nrow = 1, ncol=2,
                 widths =  unit(c(9, 1), c('cm', 'null')),
                 heights = unit(c(9, 1), c('cm', 'null')))
+  
   ggsave(
     plot = export,
     filename = paste0(
@@ -143,8 +151,8 @@ saveScatterplots <- function(fileName){
       )
     ),
     device = cairo_pdf,
-    width = 12,
-    height = 30,
+    width = 24,
+    height = 18,
     units = "cm"
   )
   
@@ -184,6 +192,7 @@ saveScatterplots <- function(fileName){
 #   mc.cores = parallel::detectCores()
 # )
 
+# saveScatterplots(files[[6]])
 
 lapply(
   files,
