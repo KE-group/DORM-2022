@@ -46,12 +46,12 @@ ggplot(data=topN,aes(x=reorder(mutsID,-counts),
              linetype="dashed")
 
 
-ggsave(
-  "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Data/Barplots/HotspotMutations.pdf",
-  width = 5,
-  height = 5,
-  device = cairo_pdf
-)
+# ggsave(
+#   "~/Desktop/Barplots/Hotspots.pdf",
+#   width = 15,
+#   height = 5,
+#   device = cairo_pdf
+# )
 ggsave(
   "/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Figures/panels from R/2A.pdf",
   width = 5,
@@ -150,6 +150,7 @@ setnames(gene_census,make.names(colnames(gene_census)))
 
 # gene_census[Gene.Symbol == "TP53",.(Role.in.Cancer)]
 gene_census[Gene.Symbol == "TP53", Role.in.Cancer := "TSG"]
+gene_census[Gene.Symbol == "BRAF", Role.in.Cancer := "oncogene"]
 
 View(topN[,.N, by = Gene])
 
@@ -167,4 +168,3 @@ write.table(x = topN[1:20,1:3],
             sep=",",
             row.names = F,
             col.names = T)
-
