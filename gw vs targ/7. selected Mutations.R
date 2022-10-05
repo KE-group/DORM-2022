@@ -37,12 +37,18 @@ gather_saveData <- function(mutant = NULL, primary.site = NULL) {
   ## Description: uses findHistology() to create summary stats for full & genome-wide data
   ## Input: mutant and tissue
   ## Output: writes the tables as files
-  ##         N = number of mutations in that Primary.site with that histology
+  ##         N = number of samples in that Primary.site with that particular histology
   
   if(grepl(pattern = "=",x = mutant,fixed = T)){
     data_of_mutant_for_primary_site <- findHistology(mutant = mutant, primary.site = primary.site)
-    site_full <- full[Primary.site==primary.site, .N, .(Histology)]
-    site_gw <- gw[Primary.site==primary.site, .N, .(Histology)]
+    # Calculating number of samples with a particular histology (gw + targ data).
+    tmp <- unique(full[Primary.site==primary.site,.(Sample.name,Primary.site,Histology)])
+    site_full <- tmp[, .N, .(Histology)]
+    rm(tmp)
+    # Calculating number of samples with a particular histology (gw data).
+    tmp <- unique(gw[Primary.site==primary.site,.(Sample.name,Primary.site,Histology)])
+    site_gw <- tmp[, .N, .(Histology)]
+    rm(tmp)
     
     DT <- data_of_mutant_for_primary_site[["FULL"]]
     site_full[, FREQ := DT$N[match(x = Histology,table = DT$Histology)]]
@@ -56,23 +62,42 @@ gather_saveData <- function(mutant = NULL, primary.site = NULL) {
     setorder(site_gw,-FREQ,na.last = T)
     setnames(x = site_gw,old = "FREQ",new = gsub("=","_",mutant))
     
+    # write.table(
+    #   x = site_full,
+    #   file = paste0("mutants/",primary.site,"_",gsub("=","_",mutant),"_full.tsv"),
+    #   sep = "\t",
+    #   quote = F,
+    #   row.names = F,
+    #   col.names = T
+    # )
+    # 
+    # write.table(
+    #   x = site_gw,
+    #   file = paste0("mutants/",primary.site,"_",gsub("=","_",mutant),"_gw.tsv"),
+    #   sep = "\t",
+    #   quote = F,
+    #   row.names = F,
+    #   col.names = T
+    # )
+    # 
+    plotDT <- data.table(Histology = unique(c(site_full$Histology,site_gw$Histology)))
+    gwDT <- cbind(plotDT,site_gw[match(plotDT$Histology,site_gw$Histology),-1])
+    colnames(gwDT)[2:ncol(gwDT)] <- paste0("gw_",colnames(gwDT)[2:ncol(gwDT)])
+    fullDT <- cbind(plotDT,site_full[match(plotDT$Histology,site_full$Histology),-1])
+    colnames(fullDT)[2:ncol(fullDT)] <- paste0("full_",colnames(fullDT)[2:ncol(fullDT)])
+    plotDT <- cbind(plotDT,gwDT[,-1],fullDT[,-1])
+    rm(gwDT,fullDT)
+
     write.table(
-      x = site_full,
-      file = paste0("mutants/",primary.site,"_",gsub("=","_",mutant),"_full.tsv"),
-      sep = "\t",
-      quote = F,
-      row.names = F,
-      col.names = T
-    )
+        x = plotDT,
+        file = paste0("mutants/",primary.site,"_",gsub("=","_",mutant),".tsv"),
+        sep = "\t",
+        quote = F,
+        row.names = F,
+        col.names = T
+      )
     
-    write.table(
-      x = site_gw,
-      file = paste0("mutants/",primary.site,"_",gsub("=","_",mutant),"_gw.tsv"),
-      sep = "\t",
-      quote = F,
-      row.names = F,
-      col.names = T
-    )
+    
   } else {
     message(paste("Incorrect format for the parameter mutant.\n Use format \"GENE=AAchange\" like findHistology(mutant = \"BRAF=V600E\") \n Received input:",mutant))
   }
@@ -110,9 +135,43 @@ full[, mutID := paste(Gene.name, Mutation.AA, sep = "=")]
 
 #--------------
 rm(list=ls()[!ls() %in% c("full","gw","findHistology" , "gather_saveData")])
+
 gather_saveData(mutant = "JAK2=V617F", primary.site = "haematopoietic_and_lymphoid_tissue")
+
 gather_saveData(mutant = "EGFR=L858R", primary.site = "lung")
 gather_saveData(mutant = "EGFR=E746_A750del", primary.site = "lung")
+gather_saveData(mutant = "KRAS=G12C", primary.site = "lung")
+
 gather_saveData(mutant = "KRAS=G12V", primary.site = "pancreas")
+gather_saveData(mutant = "KRAS=G12D", primary.site = "pancreas")
+
 gather_saveData(mutant = "BRAF=V600E", primary.site = "thyroid")
+gather_saveData(mutant = "BRAF=V600E", primary.site = "skin")
+
+gather_saveData(mutant = "BRAF=V600E", primary.site = "large_intestine")
+gather_saveData(mutant = "KRAS=G12D", primary.site = "large_intestine")
+gather_saveData(mutant = "KRAS=G12V", primary.site = "large_intestine")
+gather_saveData(mutant = "KRAS=G12C", primary.site = "large_intestine")
+
+gather_saveData(mutant = "PIK3CA=H1047R", primary.site = "breast")
+gather_saveData(mutant = "PIK3CA=E545K", primary.site = "breast")
+gather_saveData(mutant = "PIK3CA=E542K", primary.site = "breast")
+
+gather_saveData(mutant = "FOXL2=C134W", primary.site = "ovary")
+gather_saveData(mutant = "KRAS=G12V", primary.site = "ovary")
+gather_saveData(mutant = "KRAS=G12D", primary.site = "ovary")
+
+gather_saveData(mutant = "PIK3CA=E545K", primary.site = "cervix")
+gather_saveData(mutant = "PIK3CA=E542K", primary.site = "cervix")
+
+gather_saveData(mutant = "IDH1=R132H", primary.site = "central_nervous_system")
+gather_saveData(mutant = "BRAF=V600E", primary.site = "central_nervous_system")
+
+gather_saveData(mutant = "GNA11=Q209L", primary.site = "eye")
+gather_saveData(mutant = "FGFR3=S249C", primary.site = "urinary_tract")
+gather_saveData(mutant = "IDH1=R132C", primary.site = "biliary_tract")
+gather_saveData(mutant = "CTNNB1=T41A", primary.site = "soft_tissue")
+
+
+
 
