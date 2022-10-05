@@ -130,7 +130,8 @@ saveScatterplots <- function(fileName){
   export <-  scatterPlot + 
     legend + 
     plot_layout(nrow = 2, ncol=1,
-                heights = unit(c(8, 1), c('cm', 'null')))
+                widths =  unit(c(9, 1), c('cm', 'null')),
+                heights = unit(c(9, 1), c('cm', 'null')))
   ggsave(
     plot = export,
     filename = paste0(
@@ -142,8 +143,9 @@ saveScatterplots <- function(fileName){
       )
     ),
     device = cairo_pdf,
-    width = 5,
-    height = 11
+    width = 12,
+    height = 30,
+    units = "cm"
   )
   
   
