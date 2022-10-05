@@ -6,6 +6,11 @@ rm(list=ls()); gc()
 
 findCount_gw <- function(mutationID = NULL,
                          sampleSet = NULL) {
+  ## Description: uses findHistology() to create summary stats for full & genome-wide data
+  ## Input: mutation and the sampleset
+  ## Output: writes the plots to files
+  
+  
   tmp_data <- unlist(stringi::stri_split_fixed(str = mutationID, pattern = "_"))
   Mutant <- tmp_data[1]
   Tissue <- paste0(tmp_data[-1], collapse = "_")
@@ -97,7 +102,7 @@ names(colors) <- colors_data$tissue
 
 # ---------
 # Generating data for Plotting
-N=500
+N=1000
 selection <- data.frame(MutID = df_gw$MutID[1:N])
 long_gw <- melt(df_gw[1:N, ], id.vars = c("MutID", "Gene", "Mutation"))
 long_full <-
@@ -114,11 +119,6 @@ selection[is.na(selection)] <- 0
 # keeping muts that are detected in either of the full vs gw setting in a particular tissue
 selection <- as.data.table(selection[-which(rowSums(selection[,c(2,3)])==0),])
 
-# # Removing genome-wide data from full and renaming to targeted seq
-# selection$full <- selection$full-ifelse(is.na(selection$gw),0,selection$gw) # creates problems with mutations like (ZNF814 A337V)
-
-
-# selection[,density := get_density(x = gw, y = full, n = N)]
 tmp_data <- as.data.frame(stringi::stri_split_fixed(str = selection$MutID,pattern = "_",simplify = T))
 tmp_data <- within(tmp_data,  tissue <- paste(V2,V3,V4,V5,V6, sep=" "))
 selection$Mutant <- gsub("[=]"," ", tmp_data[,1])
@@ -143,8 +143,8 @@ selection$gw_count <- unlist(
     FUN = function(X)
       findCount_gw(X, "genome-wide"),
     mc.cores = parallel::detectCores()
-  )
-)
+  ),
+  use.names = F)
 
 selection$full_count <-
   unlist(
@@ -153,10 +153,15 @@ selection$full_count <-
       FUN = function(X)
         findCount_gw(X, "full-data"),
       mc.cores = parallel::detectCores()
-    )
-  )
+    ),
+  use.names = F)
+
+# Retaining observations with enough n i.e. > 10
+selection.bak <- selection
+selection <- selection[full_count > 10 & gw_count > 10, ]
 
 selection$Gene <- unlist(lapply(strsplit(selection$Mutant," "), `[[`, 1))
+
 # selection$rank <- match(x=gsub(" ","=",selection$Mutant),table = df_gw$MutID)
 # # Adjusting the size of biggest dot
 # selection$size <- tmp$V1[match(x = selection$Gene, table=tmp$Gene)]
