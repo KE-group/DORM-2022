@@ -89,13 +89,15 @@ gather_saveData <- function(mutant = NULL, primary.site = NULL) {
     rm(gwDT,fullDT)
 
     write.table(
-        x = plotDT,
-        file = paste0("mutants/",primary.site,"_",gsub("=","_",mutant),".tsv"),
-        sep = "\t",
-        quote = F,
-        row.names = F,
-        col.names = T
-      )
+      x = plotDT,
+      file = paste0("mutants/", primary.site, "_", gsub("=", "_", gsub(
+        "*", "X", mutant, fixed = T
+      )), ".tsv"),
+      sep = "\t",
+      quote = F,
+      row.names = F,
+      col.names = T
+    )
     
     
   } else {
@@ -146,12 +148,13 @@ gather_saveData(mutant = "KRAS=G12V", primary.site = "pancreas")
 gather_saveData(mutant = "KRAS=G12D", primary.site = "pancreas")
 
 gather_saveData(mutant = "BRAF=V600E", primary.site = "thyroid")
-gather_saveData(mutant = "BRAF=V600E", primary.site = "skin")
+gather_saveData(mutant = "NRAS=Q61R", primary.site = "thyroid")
 
 gather_saveData(mutant = "BRAF=V600E", primary.site = "large_intestine")
 gather_saveData(mutant = "KRAS=G12D", primary.site = "large_intestine")
 gather_saveData(mutant = "KRAS=G12V", primary.site = "large_intestine")
 gather_saveData(mutant = "KRAS=G12C", primary.site = "large_intestine")
+gather_saveData(mutant = "APC=R1450*", primary.site = "large_intestine")
 
 gather_saveData(mutant = "PIK3CA=H1047R", primary.site = "breast")
 gather_saveData(mutant = "PIK3CA=E545K", primary.site = "breast")
@@ -167,10 +170,16 @@ gather_saveData(mutant = "PIK3CA=E542K", primary.site = "cervix")
 gather_saveData(mutant = "IDH1=R132H", primary.site = "central_nervous_system")
 gather_saveData(mutant = "BRAF=V600E", primary.site = "central_nervous_system")
 
+gather_saveData(mutant = "IDH1=R132C", primary.site = "biliary_tract")
+gather_saveData(mutant = "KRAS=G12D", primary.site = "biliary_tract")
+
+gather_saveData(mutant = "BRAF=V600E", primary.site = "skin")
+gather_saveData(mutant = "TP53=R249S", primary.site = "liver")
 gather_saveData(mutant = "GNA11=Q209L", primary.site = "eye")
 gather_saveData(mutant = "FGFR3=S249C", primary.site = "urinary_tract")
-gather_saveData(mutant = "IDH1=R132C", primary.site = "biliary_tract")
+gather_saveData(mutant = "IDH1=R132C", primary.site = "bone")
 gather_saveData(mutant = "CTNNB1=T41A", primary.site = "soft_tissue")
+gather_saveData(mutant = "ALK=R1275Q", primary.site = "autonomic_ganglia")
 
 
 
