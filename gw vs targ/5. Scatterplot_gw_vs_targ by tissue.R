@@ -63,7 +63,7 @@ df_gw <- as.data.frame(df_gw)
 for(j in 3:ncol(df_gw)){
   df_gw[,j] <- (df_gw[,j]*100)/nCT$count[nCT$tissue==colnames(df_gw)[j]]
 }
-df_gw <- as.data.table(df_gw)
+df_gw <- setDT(df_gw)
 df_gw[, MutID:=paste0(Gene,"=",Mutation)]
 nCT_gw <- nCT
 
@@ -79,7 +79,7 @@ df_full <- as.data.frame(df_full)
 for(j in 3:ncol(df_full)){
   df_full[,j] <- (df_full[,j]*100)/nCT$count[nCT$tissue==colnames(df_full)[j]]
 }
-df_full <- as.data.table(df_full)
+df_full <- setDT(df_full)
 
 df_full[, MutID:=paste0(Gene,"=",Mutation)]
 setnames(nCT,"count","full")
@@ -117,7 +117,7 @@ selection$full <- long_full$value[match(x = selection$MutID, table = long_full$M
 selection[is.na(selection)] <- 0
 
 # keeping muts that are detected in either of the full vs gw setting in a particular tissue
-selection <- as.data.table(selection[-which(rowSums(selection[,c(2,3)])==0),])
+selection <- setDT(selection[-which(rowSums(selection[,c(2,3)])==0),])
 
 tmp_data <- as.data.frame(stringi::stri_split_fixed(str = selection$MutID,pattern = "_",simplify = T))
 tmp_data <- within(tmp_data,  tissue <- paste(V2,V3,V4,V5,V6, sep=" "))

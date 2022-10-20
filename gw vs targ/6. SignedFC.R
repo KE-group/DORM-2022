@@ -18,7 +18,7 @@ N=100
 selection <- data.frame(MutID=df_gw$MutID[1:N])
 selection$gw <- df_gw$counts[match(x = selection$MutID, table = df_gw$MutID)]
 selection$full <- df_full$counts[match(x = selection$MutID, table = df_full$MutID)]
-selection <- as.data.table(selection)
+selection <- setDT(selection)
 
 # # Removing genome-wide data from full and renaming to targeted seq
 # selection$full <- selection$full-ifelse(is.na(selection$gw),0,selection$gw) # creates problems with mutations like (ZNF814 A337V)
