@@ -116,6 +116,7 @@ plotStudyStats <- function(gene, mutation, primary.site, histology = NULL){
     set.seed(2022)
     
     print(head(alterationFreq,10))
+    levels(alterationFreq$Genomewide.screen) <- c("targeted","gw")
     # # Scatterplot -  Percent altered vs PMID (size of dot = study size)
     # ggplot(alterationFreq,aes(x=sample(PMID),
     #                           y=percent,
@@ -160,7 +161,7 @@ plotStudyStats <- function(gene, mutation, primary.site, histology = NULL){
     #  coord_cartesian(clip="off")
     
     studyScale_breaks <-
-      c(0, 1, 10, 30, 100, 1000, max(alterationFreq$studyScale, na.rm = T))
+      c(0, 1, 2, 5, 10, 30, 100, 1000, max(alterationFreq$studyScale, na.rm = T))
 
     bar_PopulationFreq <- ggplot(
       data = alterationFreq,
@@ -182,7 +183,8 @@ plotStudyStats <- function(gene, mutation, primary.site, histology = NULL){
                    scale_name = "stepsn",
                    palette = function(x) viridis::turbo(length(studyScale_breaks), direction = -1),
                    breaks = studyScale_breaks,
-                   guide = "colorsteps")+
+                   guide = "colorsteps",
+                   "Genes with\nmutations")+
       ggtitle(paste0(
         gene,
         " ",
@@ -217,7 +219,8 @@ plotStudyStats <- function(gene, mutation, primary.site, histology = NULL){
                    scale_name = "stepsn",
                    palette = function(x) viridis::turbo(length(studyScale_breaks),direction = -1),
                    breaks = studyScale_breaks,
-                   guide = "colorsteps")
+                   guide = "colorsteps",
+                   "Genes with\nmutations")
     
     bar_Size <- bar_Size + 
       facet_grid(.~Genomewide.screen, scales = "free_x", space = "free_x")
@@ -278,25 +281,39 @@ plotStudyStats <- function(gene, mutation, primary.site, histology = NULL){
 }
 
 
-plotStudyStats("EGFR","L858R","lung","adenocarcinoma")
-plotStudyStats("EGFR","L858R","lung")
-plotStudyStats("EGFR","E746_A750del","lung")
-plotStudyStats("KRAS","G12C","lung")
-plotStudyStats("KRAS","G12V","pancreas","ductal_carcinoma")
-plotStudyStats("KRAS","G12D","large_intestine")
-plotStudyStats("BRAF","V600E","skin","malignant_melanoma/NS")
-plotStudyStats("PIK3CA","H1047R","breast")
-plotStudyStats("PIK3CA","H1047R","breast","carcinoma/NS")
-plotStudyStats("JAK2","V617F","haematopoietic_and_lymphoid_tissue")
-plotStudyStats("JAK2","V617F","haematopoietic_and_lymphoid_tissue","haematopoietic_neoplasm/polycythaemia_vera")
-plotStudyStats("JAK2","V617F","haematopoietic_and_lymphoid_tissue","haematopoietic_neoplasm/myelofibrosis")
-plotStudyStats("IDH1","R132H","central_nervous_system")
+plotStudyStats("EGFR", "L858R", "lung", "adenocarcinoma")
+plotStudyStats("EGFR", "L858R", "lung")
+plotStudyStats("EGFR", "E746_A750del", "lung")
+plotStudyStats("KRAS", "G12C", "lung")
+plotStudyStats("KRAS", "G12V", "pancreas", "ductal_carcinoma")
+plotStudyStats("KRAS", "G12D", "large_intestine")
+plotStudyStats("BRAF", "V600E", "skin", "malignant_melanoma/NS")
+plotStudyStats("PIK3CA", "H1047R", "breast")
+plotStudyStats("PIK3CA", "H1047R", "breast", "carcinoma/NS")
+plotStudyStats("IDH1", "R132H", "central_nervous_system")
+
+plotStudyStats("JAK2", "V617F", "haematopoietic_and_lymphoid_tissue")
+
+plotStudyStats(
+  "JAK2",
+  "V617F",
+  "haematopoietic_and_lymphoid_tissue",
+  "haematopoietic_neoplasm/polycythaemia_vera"
+)
+
+plotStudyStats(
+  "JAK2",
+  "V617F",
+  "haematopoietic_and_lymphoid_tissue",
+  "haematopoietic_neoplasm/myelofibrosis"
+)
+
 
 # 
-# gene <- "EGFR"
-# mutation <- "L858R"
-# primary.site <- "lung"
-# histology <- "adenocarcinoma"
+gene <- "EGFR"
+mutation <- "L858R"
+primary.site <- "lung"
+histology <- "adenocarcinoma"
 
 # gene <- "BRAF"
 # mutation <- "V600E"
