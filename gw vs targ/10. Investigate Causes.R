@@ -101,7 +101,9 @@ plotStudyStats <- function(gene, mutation, primary.site, histology = NULL){
     tmp <- sampleCount_by_histology[Primary.site == primary.site & Histology == histology,]
     sampleCount_in_histology <- tmp[, .(sum_count=sum(count)), by = c("PMID","Primary.site","Histology")]
   }
-      
+    subFull <- unique(subFull[, c("Mutation.CDS","Sample.Type","Tumor.Origin") := NULL])
+    
+    
     # Calculating number of samples with the query mutation in various studies
     alterationFreq <- subFull[,.N, .(PMID, Genomewide.screen)]
     rm(subFull);gc()
@@ -178,7 +180,7 @@ plotStudyStats <- function(gene, mutation, primary.site, histology = NULL){
             axis.text.x = element_blank(),
             axis.title.x = element_blank())+
       scale_y_continuous(labels = scales::percent,expand = c(0,0))+
-      ylab(paste0("Altered samples (%)\n(",gene," ",mutation,")"))+
+      ylab(paste0("Altered cases (%)\n(",gene," ",mutation,")"))+
       binned_scale(aesthetics = "fill",
                    scale_name = "stepsn",
                    palette = function(x) viridis::turbo(length(studyScale_breaks), direction = -1),
@@ -213,8 +215,8 @@ plotStudyStats <- function(gene, mutation, primary.site, histology = NULL){
             axis.title.x = element_blank(),
             axis.line.x = element_blank())+
       scale_y_reverse()+
-      ylab("Altered\nsamples (n)")+
-      geom_hline(yintercept = 0,size=1)+
+      ylab("Altered\ncases (n)")+
+      geom_hline(yintercept = 0,size=0.5)+
       binned_scale(aesthetics = "fill",
                    scale_name = "stepsn",
                    palette = function(x) viridis::turbo(length(studyScale_breaks),direction = -1),
@@ -256,7 +258,7 @@ plotStudyStats <- function(gene, mutation, primary.site, histology = NULL){
     write.table(
       x = alterationFreq,
       file = paste0(
-        "investigate/",
+        "investigate/tsv/",
         ifelse(
           test = is.null(histology),
           yes = paste(gene,
