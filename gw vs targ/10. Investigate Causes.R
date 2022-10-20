@@ -3,59 +3,59 @@ library(data.table)
 rm(list=ls()); gc()
 
 # ##------- Setting up data
-
-source('https://gist.githubusercontent.com/dchakro/8b1e97ba6853563dd0bb5b7be2317692/raw/parallelRDS.R')
-# Unused --------------
-# gwDT <- readRDS.gz("/Users/deepankar/OneDrive - O365 Turun yliopisto/ExtraWorkSync/Klaus-Lab-Data/Big Data/COSMIC/v95/genome_wide/1_AllsamplesMinInfo.RDS")
-#
-# gwDT <- gwDT[!grepl("_ENST", Gene.name, fixed = T), ]
-# gwDT <- gwDT[!stringi::stri_detect_regex(str = Mutation.AA, pattern = "^p.\\?"), ]
-# gwDT <- gwDT[!grepl(pattern = '=', x = Mutation.AA, fixed = T), ]
-# gwDT[, Mutation.AA := stringi::stri_replace_first_fixed(str = Mutation.AA,
-#                                                     pattern = "p.",
-#                                                     replacement = "")]
-# gwDT[, Mutation.AA := stringi::stri_replace_all_regex(str = Mutation.AA,
-#                                                   pattern = "\\*",
-#                                                   replacement = "X")]
-
-fullDT <- readRDS.gz("/Users/deepankar/OneDrive - O365 Turun yliopisto/ExtraWorkSync/Klaus-Lab-Data/Big Data/COSMIC/v95/targeted_and_wgs/1_AllsamplesMinInfo.RDS")
-
-fullDT <- fullDT[!grepl("_ENST", Gene.name, fixed = T), ]
-fullDT <- fullDT[!stringi::stri_detect_regex(str = Mutation.AA, pattern = "^p.\\?"), ]
-fullDT <- fullDT[!grepl(pattern = '=', x = Mutation.AA, fixed = T), ]
-fullDT[, Mutation.AA := stringi::stri_replace_first_fixed(str = Mutation.AA,
-                                                        pattern = "p.",
-                                                        replacement = "")]
-fullDT[, Mutation.AA := stringi::stri_replace_all_regex(str = Mutation.AA,
-                                                      pattern = "\\*",
-                                                      replacement = "X")]
-
-PMID_info <- unique(na.exclude(fullDT[,.(Sample.name, PMID, Gene.name)]))
-# Calculating the scale of study i.e. number of genes assayed in the individual studies
-number_of_genes <- PMID_info[,uniqueN (.SD), 
-                             by=PMID, 
-                             .SDcols = c("PMID", "Gene.name")]
-rm(PMID_info);gc()
-
-# Calculate the number of samples in the study (with atleast 1 mutation)
-tmp <- unique(na.exclude(fullDT[,.(Sample.name,PMID,Primary.site,Histology)]))
-
-sampleCount_in_study <- tmp[, .(count = .N) , by = PMID]
-sampleCount_by_histology <- tmp[, .(count = .N) , by = c("PMID","Primary.site","Histology")]
-rm(tmp);gc()
-
-##--- Writing Data
-con <- pipe("pigz -p4 > 20221007_Data.GW.Targ.gz", "wb")
-save(fullDT,
-     sampleCount_in_study,
-     sampleCount_by_histology,
-     number_of_genes,
-     file = con)
-close(con);rm(con)
+# 
+# source('https://gist.githubusercontent.com/dchakro/8b1e97ba6853563dd0bb5b7be2317692/raw/parallelRDS.R')
+# # Unused --------------
+# # gwDT <- readRDS.gz("/Users/deepankar/OneDrive - O365 Turun yliopisto/ExtraWorkSync/Klaus-Lab-Data/Big Data/COSMIC/v95/genome_wide/1_AllsamplesMinInfo.RDS")
+# #
+# # gwDT <- gwDT[!grepl("_ENST", Gene.name, fixed = T), ]
+# # gwDT <- gwDT[!stringi::stri_detect_regex(str = Mutation.AA, pattern = "^p.\\?"), ]
+# # gwDT <- gwDT[!grepl(pattern = '=', x = Mutation.AA, fixed = T), ]
+# # gwDT[, Mutation.AA := stringi::stri_replace_first_fixed(str = Mutation.AA,
+# #                                                     pattern = "p.",
+# #                                                     replacement = "")]
+# # gwDT[, Mutation.AA := stringi::stri_replace_all_regex(str = Mutation.AA,
+# #                                                   pattern = "\\*",
+# #                                                   replacement = "X")]
+# 
+# fullDT <- readRDS.gz("/Users/deepankar/OneDrive - O365 Turun yliopisto/ExtraWorkSync/Klaus-Lab-Data/Big Data/COSMIC/v95/targeted_and_wgs/1_AllsamplesMinInfo.RDS")
+# 
+# fullDT <- fullDT[!grepl("_ENST", Gene.name, fixed = T), ]
+# fullDT <- fullDT[!stringi::stri_detect_regex(str = Mutation.AA, pattern = "^p.\\?"), ]
+# fullDT <- fullDT[!grepl(pattern = '=', x = Mutation.AA, fixed = T), ]
+# fullDT[, Mutation.AA := stringi::stri_replace_first_fixed(str = Mutation.AA,
+#                                                         pattern = "p.",
+#                                                         replacement = "")]
+# fullDT[, Mutation.AA := stringi::stri_replace_all_regex(str = Mutation.AA,
+#                                                       pattern = "\\*",
+#                                                       replacement = "X")]
+# 
+# PMID_info <- unique(na.exclude(fullDT[,.(Sample.name, PMID, Gene.name)]))
+# # Calculating the scale of study i.e. number of genes assayed in the individual studies
+# number_of_genes <- PMID_info[,uniqueN (.SD), 
+#                              by=PMID, 
+#                              .SDcols = c("PMID", "Gene.name")]
+# rm(PMID_info);gc()
+# 
+# # Calculate the number of samples in the study (with atleast 1 mutation)
+# tmp <- unique(na.exclude(fullDT[,.(Sample.name,PMID,Primary.site,Histology)]))
+# 
+# sampleCount_in_study <- tmp[, .(count = .N) , by = PMID]
+# sampleCount_by_histology <- tmp[, .(count = .N) , by = c("PMID","Primary.site","Histology")]
+# rm(tmp);gc()
+# 
+# ##--- Writing Data
+# con <- pipe("pigz -p4 > 20221020_Data.GW.Targ.gz", "wb")
+# save(fullDT,
+#      sampleCount_in_study,
+#      sampleCount_by_histology,
+#      number_of_genes,
+#      file = con)
+# close(con);rm(con)
 
 
 ## -- Reading Data
-con <- pipe("pigz -dkc -p4 20221007_Data.GW.Targ.gz","rb")
+con <- pipe("pigz -dkc -p4 20221010_Data.GW.Targ.gz","rb")
 load(file = con)
 close(con);rm(con)
 
@@ -98,7 +98,7 @@ plotStudyStats <- function(gene, mutation, primary.site, histology = NULL){
     # Selecting data related to the input Query gene/mutation/tissue combo
     subFull <- fullDT[Gene.name==gene & Mutation.AA==mutation & Primary.site == primary.site & Histology == histology,]
   }
-    
+      
     # Calculating number of samples with the query mutation in various studies
     alterationFreq <- subFull[,.N, .(PMID, Genomewide.screen)]
     rm(subFull);gc()
@@ -113,7 +113,7 @@ plotStudyStats <- function(gene, mutation, primary.site, histology = NULL){
     set.seed(2022)
     
     print(head(alterationFreq,20))
-    ## Scatterplot -  Percent altered vs PMID (size of dot = study size)
+    # # Scatterplot -  Percent altered vs PMID (size of dot = study size)
     # ggplot(alterationFreq,aes(x=sample(PMID),
     #                           y=percent,
     #                           size=N,
@@ -157,8 +157,8 @@ plotStudyStats <- function(gene, mutation, primary.site, histology = NULL){
     #  coord_cartesian(clip="off")
     
     studyScale_breaks <-
-      c(0, 1, 2, 5, 10, 100, 1000, 5000, 10000, max(alterationFreq$studyScale, na.rm = T))
-    
+      c(0, 1, 10, 30, 100, 1000, max(alterationFreq$studyScale, na.rm = T))
+
     bar_PopulationFreq <- ggplot(
       data = alterationFreq,
       aes(
@@ -177,7 +177,7 @@ plotStudyStats <- function(gene, mutation, primary.site, histology = NULL){
       ylab(paste0("Altered samples (%)\n(",gene," ",mutation,")"))+
       binned_scale(aesthetics = "fill",
                    scale_name = "stepsn",
-                   palette = function(x) viridis::turbo(length(studyScale_breaks),direction = -1),
+                   palette = function(x) viridis::turbo(length(studyScale_breaks), direction = -1),
                    breaks = studyScale_breaks,
                    guide = "colorsteps")+
       ggtitle(paste0(
@@ -192,8 +192,8 @@ plotStudyStats <- function(gene, mutation, primary.site, histology = NULL){
           no = paste0(" / ", histology)
         )
       ))
-    
-    bar_Size <- ggplot(data = alterationFreq, 
+
+    bar_Size <- ggplot(data = alterationFreq,
                        aes(x = reorder(PMID, -N),
                            y = N,
                            fill = studyScale))+
@@ -214,13 +214,13 @@ plotStudyStats <- function(gene, mutation, primary.site, histology = NULL){
                    guide = "colorsteps")
 
     export <-  bar_PopulationFreq +
-      bar_Size + 
-      plot_layout(nrow = 2, 
+      bar_Size +
+      plot_layout(nrow = 2,
                   ncol=1,
                   widths =  unit(c(28, 28), c('cm', 'cm')),
                   heights = unit(c(4, 4), c('cm', 'cm')),
                   guides = "collect")
-    
+
     ggsave(
       filename = paste0(
         "investigate/",
@@ -241,9 +241,10 @@ plotStudyStats <- function(gene, mutation, primary.site, histology = NULL){
       height = 10,
       units = "cm"
       )
+    return(alterationFreq)
 }
 
-plotStudyStats("EGFR","L858R","lung","adenocarcinoma")
+val <- plotStudyStats("EGFR","L858R","lung","adenocarcinoma")
 plotStudyStats("EGFR","L858R","lung")
 plotStudyStats("EGFR","E746_A750del","lung")
 plotStudyStats("KRAS","G12C","lung")
@@ -258,9 +259,9 @@ plotStudyStats("JAK2","V617F","haematopoietic_and_lymphoid_tissue","haematopoiet
 plotStudyStats("IDH1","R132H","central_nervous_system")
 
 # 
-# gene <- "EGFR"
-# mutation <- "L858R"
-# primary.site <- "lung"
+gene <- "EGFR"
+mutation <- "L858R"
+primary.site <- "lung"
 # histology <- "adenocarcinoma"
 
 # gene <- "BRAF"
