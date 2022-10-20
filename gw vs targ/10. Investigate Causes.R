@@ -3,7 +3,7 @@ library(data.table)
 rm(list=ls()); gc()
 
 # ##------- Setting up data
-# 
+
 # source('https://gist.githubusercontent.com/dchakro/8b1e97ba6853563dd0bb5b7be2317692/raw/parallelRDS.R')
 # # Unused --------------
 # # gwDT <- readRDS.gz("/Users/deepankar/OneDrive - O365 Turun yliopisto/ExtraWorkSync/Klaus-Lab-Data/Big Data/COSMIC/v95/genome_wide/1_AllsamplesMinInfo.RDS")
@@ -30,10 +30,19 @@ rm(list=ls()); gc()
 #                                                       pattern = "\\*",
 #                                                       replacement = "X")]
 # 
+# ### ------ Several TCGA studies do not have PMIDs in COSMIC!!! -------
+# # tmp <- fullDT[grep(pattern = "TCGA",x = Sample.name ,fixed = T),]
+# 
+# # Setting -404 as a fake PubMed ID 
+# fullDT[(grepl(pattern = "TCGA", x = Sample.name , fixed = T) &
+#           is.na(PMID)), "PMID"] <- -404
+# # Checking that it worked
+# fullDT[grepl(pattern = "TCGA",x = Sample.name ,fixed = T),.N,.(PMID)]
+# 
 # PMID_info <- unique(na.exclude(fullDT[,.(Sample.name, PMID, Gene.name)]))
 # # Calculating the scale of study i.e. number of genes assayed in the individual studies
-# number_of_genes <- PMID_info[,uniqueN (.SD), 
-#                              by=PMID, 
+# number_of_genes <- PMID_info[,uniqueN (.SD),
+#                              by=PMID,
 #                              .SDcols = c("PMID", "Gene.name")]
 # rm(PMID_info);gc()
 # 
@@ -63,7 +72,7 @@ close(con);rm(con)
 library(ggplot2)
 library(patchwork)
 source('https://raw.githubusercontent.com/dchakro/ggplot_themes/master/DC_theme_generator.R')
-customtheme <- DC_theme_generator(type = "L",legend = T)
+customtheme <- DC_theme_generator(type = "L",legend = T, y_gridline = "#F1F1F1")
 dir.create("investigate/",showWarnings = F)
 
 #---------------
@@ -80,31 +89,25 @@ dir.create("investigate/",showWarnings = F)
 #------------------
 ##---- Defining Functions
 
-# # Calculate the number of samples in the study (with atleast 1 mutation)
-countSamplesForPMID <- function(gene, mutation, primary.site, histology = NULL,PubMedID = NULL){
-  if(is.null(histology)){
-    return(nrow(unique(x = fullDT[PMID == PubMedID & Gene.name==gene & primary.site==primary.site, "Sample.name"])))
-  } else {
-    return(nrow(unique(x = fullDT[PMID == PubMedID & Gene.name==gene & primary.site==primary.site & Histology == histology, "Sample.name"])))
-  }
-}
-
 plotStudyStats <- function(gene, mutation, primary.site, histology = NULL){
   if(is.null(histology)){
     # Selecting data related to the input Query gene/mutation/tissue combo
     subFull <- fullDT[Gene.name==gene & Mutation.AA==mutation & Primary.site == primary.site,]
-    
+    tmp <- sampleCount_by_histology[Primary.site == primary.site,]
+    sampleCount_in_histology <- tmp[, .(sum_count=sum(count)), by = c("PMID","Primary.site")]
   } else {
     # Selecting data related to the input Query gene/mutation/tissue combo
     subFull <- fullDT[Gene.name==gene & Mutation.AA==mutation & Primary.site == primary.site & Histology == histology,]
+    tmp <- sampleCount_by_histology[Primary.site == primary.site & Histology == histology,]
+    sampleCount_in_histology <- tmp[, .(sum_count=sum(count)), by = c("PMID","Primary.site","Histology")]
   }
       
     # Calculating number of samples with the query mutation in various studies
     alterationFreq <- subFull[,.N, .(PMID, Genomewide.screen)]
     rm(subFull);gc()
     alterationFreq <- alterationFreq[!is.na(PMID),]
-    idx <- match(x = alterationFreq$PMID,table = sampleCount_in_study$PubMedID)
-    alterationFreq[, percent:= N / sampleCount_in_study$N[idx]]
+    idx <- match(x = alterationFreq$PMID,table = sampleCount_in_histology$PMID)
+    alterationFreq[, percent:= N / sampleCount_in_histology$sum_count[idx]]
     
     idx <- match(x = alterationFreq$PMID,table = number_of_genes$PMID)
     alterationFreq[, studyScale:= number_of_genes$V1[idx]]
@@ -112,7 +115,7 @@ plotStudyStats <- function(gene, mutation, primary.site, histology = NULL){
     setorder(alterationFreq,-N)
     set.seed(2022)
     
-    print(head(alterationFreq,20))
+    print(head(alterationFreq,10))
     # # Scatterplot -  Percent altered vs PMID (size of dot = study size)
     # ggplot(alterationFreq,aes(x=sample(PMID),
     #                           y=percent,
@@ -162,7 +165,7 @@ plotStudyStats <- function(gene, mutation, primary.site, histology = NULL){
     bar_PopulationFreq <- ggplot(
       data = alterationFreq,
       aes(
-        x = reorder(PMID, -N),
+        x = reorder(PMID, -percent),
         y = percent,
         fill = studyScale
       )
@@ -193,8 +196,11 @@ plotStudyStats <- function(gene, mutation, primary.site, histology = NULL){
         )
       ))
 
+    bar_PopulationFreq <- bar_PopulationFreq + 
+      facet_grid(.~Genomewide.screen, scales = "free_x",space = "free_x")
+     
     bar_Size <- ggplot(data = alterationFreq,
-                       aes(x = reorder(PMID, -N),
+                       aes(x = reorder(PMID, -percent),
                            y = N,
                            fill = studyScale))+
       geom_col(position = "dodge",
@@ -204,14 +210,17 @@ plotStudyStats <- function(gene, mutation, primary.site, histology = NULL){
             axis.text.x = element_blank(),
             axis.title.x = element_blank(),
             axis.line.x = element_blank())+
-      scale_y_reverse(expand = c(0,0))+
-      ylab("Study size (n)")+
+      scale_y_reverse()+
+      ylab("Altered\nsamples (n)")+
       geom_hline(yintercept = 0,size=1)+
       binned_scale(aesthetics = "fill",
                    scale_name = "stepsn",
                    palette = function(x) viridis::turbo(length(studyScale_breaks),direction = -1),
                    breaks = studyScale_breaks,
                    guide = "colorsteps")
+    
+    bar_Size <- bar_Size + 
+      facet_grid(.~Genomewide.screen, scales = "free_x", space = "free_x")
 
     export <-  bar_PopulationFreq +
       bar_Size +
@@ -238,13 +247,38 @@ plotStudyStats <- function(gene, mutation, primary.site, histology = NULL){
           ".pdf"),
       plot = export,
       width = 35,
-      height = 10,
+      height = 12,
       units = "cm"
       )
-    return(alterationFreq)
+    write.table(
+      x = alterationFreq,
+      file = paste0(
+        "investigate/",
+        ifelse(
+          test = is.null(histology),
+          yes = paste(gene,
+                      mutation,
+                      primary.site,
+                      sep = "_"),
+          no = paste(
+            gene,
+            mutation,
+            primary.site,
+            gsub("/", "_", histology, fixed = T),
+            sep = "_"
+          )
+        ),
+        ".tsv"
+      ),
+      sep = "\t",
+      row.names = F,
+      col.names = T,
+      quote = F
+    )
 }
 
-val <- plotStudyStats("EGFR","L858R","lung","adenocarcinoma")
+
+plotStudyStats("EGFR","L858R","lung","adenocarcinoma")
 plotStudyStats("EGFR","L858R","lung")
 plotStudyStats("EGFR","E746_A750del","lung")
 plotStudyStats("KRAS","G12C","lung")
@@ -259,9 +293,9 @@ plotStudyStats("JAK2","V617F","haematopoietic_and_lymphoid_tissue","haematopoiet
 plotStudyStats("IDH1","R132H","central_nervous_system")
 
 # 
-gene <- "EGFR"
-mutation <- "L858R"
-primary.site <- "lung"
+# gene <- "EGFR"
+# mutation <- "L858R"
+# primary.site <- "lung"
 # histology <- "adenocarcinoma"
 
 # gene <- "BRAF"
