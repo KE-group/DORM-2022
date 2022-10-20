@@ -55,7 +55,7 @@ rm(list=ls()); gc()
 
 
 ## -- Reading Data
-con <- pipe("pigz -dkc -p4 20221010_Data.GW.Targ.gz","rb")
+con <- pipe("pigz -dkc -p4 20221020_Data.GW.Targ.gz","rb")
 load(file = con)
 close(con);rm(con)
 
