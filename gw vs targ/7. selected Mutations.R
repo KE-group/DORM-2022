@@ -16,6 +16,7 @@ findHistology <- function(mutant = NULL, primary.site = NULL){
     # Calculating statistics for each histology
     f_stat <- full_mut[,.N,.(Histology)]
     gw_stat <- gw_mut[,.N,.(Histology)]
+    # percentages are calculated by the mutant + Primary site
     f_stat[,percentage := (N*100)/nrow(full_mut)]
     gw_stat[,percentage := (N*100)/nrow(gw_mut)]
     setorder(f_stat,-percentage)
