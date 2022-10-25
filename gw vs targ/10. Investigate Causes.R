@@ -33,7 +33,7 @@ rm(list=ls()); gc()
 # ### ------ Several TCGA studies do not have PMIDs in COSMIC!!! -------
 # # tmp <- fullDT[grep(pattern = "TCGA",x = Sample.name ,fixed = T),]
 # 
-# # Setting -404 as a fake PubMed ID 
+# # Setting -404 as a fake PubMed ID
 # fullDT[(grepl(pattern = "TCGA", x = Sample.name , fixed = T) &
 #           is.na(PMID)), "PMID"] <- -404
 # # Checking that it worked
@@ -47,12 +47,12 @@ rm(list=ls()); gc()
 # rm(PMID_info);gc()
 # 
 # # Calculate the number of samples in the study (with atleast 1 mutation)
-# tmp <- unique(na.exclude(fullDT[,.(Sample.name,PMID,Primary.site,Histology)]))
+# tmp <- unique(na.exclude(fullDT[,.(Sample.name, PMID, Primary.site, Histology)]))
 # 
 # sampleCount_in_study <- tmp[, .(count = .N) , by = PMID]
-# sampleCount_by_histology <- tmp[, .(count = .N) , by = c("PMID","Primary.site","Histology")]
+# sampleCount_by_histology <- tmp[, .(count = .N) , by = c("PMID", "Primary.site","Histology")]
 # rm(tmp);gc()
-# 
+
 # ##--- Writing Data
 # con <- pipe("pigz -p4 > 20221020_Data.GW.Targ.gz", "wb")
 # save(fullDT,
@@ -73,7 +73,7 @@ library(ggplot2)
 library(patchwork)
 source('https://raw.githubusercontent.com/dchakro/ggplot_themes/master/DC_theme_generator.R')
 customtheme <- DC_theme_generator(type = "L",legend = T, y_gridline = "#F1F1F1")
-dir.create("investigate/",showWarnings = F)
+dir.create("investigate/tsv", recursive = T, showWarnings = F)
 
 #---------------
 # library(ggplot2)
@@ -255,6 +255,7 @@ plotStudyStats <- function(gene, mutation, primary.site, histology = NULL){
       height = 12,
       units = "cm"
       )
+    
     write.table(
       x = alterationFreq,
       file = paste0(
@@ -326,5 +327,11 @@ gene <- "IDH1"
 mutation <- "R132H" 
 primary.site <- "central_nervous_system"
 histology <- NULL
-
 # rm(list=ls()[!ls() %in% c("fullDT","sampleCount_in_study","number_of_genes")])
+
+View(fullDT[PMID=="24837467" & Gene.name == "JAK2" & Mutation.AA == "V617F", ])
+fullDT[PMID=="24837467" & Gene.name == "JAK2" & Mutation.AA == "V617F", .N, .(Histology)]
+fullDT[PMID=="24837467" & Histology == "haematopoietic_neoplasm/myelofibrosis", .(Sample.name)]
+duplicated(fullDT[PMID=="24837467" & Gene.name == "JAK2" & Mutation.AA == "V617F", .(Sample.name)])
+
+fullDT[PMID=="22262778",.(Sample.name)]
