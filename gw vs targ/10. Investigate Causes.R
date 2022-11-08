@@ -294,6 +294,7 @@ plotStudyStats("BRAF", "V600E", "skin", "malignant_melanoma/NS")
 plotStudyStats("PIK3CA", "H1047R", "breast")
 plotStudyStats("PIK3CA", "H1047R", "breast", "carcinoma/NS")
 plotStudyStats("IDH1", "R132H", "central_nervous_system")
+plotStudyStats("FOXL2", "C134W", "ovary")
 
 plotStudyStats("JAK2", "V617F", "haematopoietic_and_lymphoid_tissue")
 
@@ -311,22 +312,26 @@ plotStudyStats(
   "haematopoietic_neoplasm/myelofibrosis"
 )
 
+# gene <- "EGFR"
+# mutation <- "L858R"
+# primary.site <- "lung"
+# histology <- "adenocarcinoma"
 
-# 
-gene <- "EGFR"
-mutation <- "L858R"
-primary.site <- "lung"
-histology <- "adenocarcinoma"
+gene <- "JAK2"
+mutation <- "V617F"
+primary.site <- "haematopoietic_and_lymphoid_tissue"
+histology <- "haematopoietic_neoplasm/myelofibrosis"
 
 # gene <- "BRAF"
 # mutation <- "V600E"
 # primary.site <- "skin"
 # histology <- "malignant_melanoma/NS"
 
-gene <- "IDH1"
-mutation <- "R132H" 
-primary.site <- "central_nervous_system"
-histology <- NULL
+# gene <- "IDH1"
+# mutation <- "R132H" 
+# primary.site <- "central_nervous_system"
+# histology <- NULL
+
 # rm(list=ls()[!ls() %in% c("fullDT","sampleCount_in_study","number_of_genes")])
 
 View(fullDT[PMID=="24837467" & Gene.name == "JAK2" & Mutation.AA == "V617F", ])
