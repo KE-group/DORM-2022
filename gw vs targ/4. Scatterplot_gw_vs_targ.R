@@ -4,11 +4,11 @@ library(data.table)
 # Reading data
 rm(list=ls()); gc()
 
-df_gw <- readRDS("/Users/deepankar/OneDrive - O365 Turun yliopisto/ExtraWorkSync/Klaus-Lab-Data/Big Data/COSMIC/v95/Full_Database/20220117.FrequencyByMutation.RDS")
+df_gw <- readRDS("/Users/deepankar/mntpoint/UTU.iMac/OneDrive - O365 Turun yliopisto/ExtraWorkSync/Klaus-Lab-Data/Big Data/COSMIC/v95/genome_wide/20220117_results/20220117.FrequencyByMutation.RDS")
 df_gw <- df_gw[,1:4]
 df_gw[, MutID:=paste0(Gene,"=",Mutation)]
 
-df_full <- readRDS("/Users/deepankar/OneDrive - O365 Turun yliopisto/ExtraWorkSync/Klaus-Lab-Data/Big Data/COSMIC/v95/targeted_and_wgs/20220606.FrequencyByMutation.RDS")
+df_full <- readRDS("/Users/deepankar/mntpoint/UTU.iMac/OneDrive - O365 Turun yliopisto/ExtraWorkSync/Klaus-Lab-Data/Big Data/COSMIC/v95/targeted_and_wgs/20220606_results/20220606.FrequencyByMutation.RDS")
 df_full <- df_full[,1:4]
 df_full[, MutID:=paste0(Gene,"=",Mutation)]
 
@@ -52,12 +52,12 @@ get_density <- function(x, y, ...) {
 
 selection[,density := get_density(x = gw, y = targ, n = N)]
 
-source("/Users/deepankar/OneDrive - O365 Turun yliopisto/Git/Gitlab.DC/Utilities/SignedFoldChange.R")
-selection[,size:=FoldChange(gw_count,targ_count)]
-summary(selection$size)
-selection$size[selection$size == Inf] <- 0
-selection$size[is.na(selection$size)] <- 0
-summary(selection$size)
+# source("/Users/deepankar/OneDrive - O365 Turun yliopisto/Git/Gitlab.DC/Utilities/SignedFoldChange.R")
+# selection[,size:=FoldChange(gw_count,targ_count)]
+# summary(selection$size)
+# selection$size[selection$size == Inf] <- 0
+# selection$size[is.na(selection$size)] <- 0
+# summary(selection$size)
 
 #-----------
 #  Plotting
@@ -65,7 +65,7 @@ library(ggplot2)
 source('https://raw.githubusercontent.com/dchakro/ggplot_themes/master/DC_theme_generator.R')
 customtheme <- DC_theme_generator(type = "L",legend = F)
 ggplot(data = selection, aes(x=gw, y=targ, color=density))+
-  geom_point(alpha=0.7,aes(size=size))+
+  geom_point(alpha=0.7,aes(size=gw_count))+
   xlab("Share in genome-wide screens (%)")+
   ylab("Share in complete data (%)")+
   scale_color_viridis_c(option = "plasma")+
@@ -88,7 +88,7 @@ p <- plot_ly(
   alpha = 0.8,
   x =  ~ gw,
   y =  ~ targ,
-  size = ~size,
+  size = ~gw_count,
   sizes = c(8, 50),
   color = ~density,
   colors = "plasma",
