@@ -4,11 +4,11 @@ library(data.table)
 # Reading data
 rm(list=ls()); gc()
 
-df_gw <- readRDS("/Users/deepankar/mntpoint/UTU.iMac/OneDrive - O365 Turun yliopisto/ExtraWorkSync/Klaus-Lab-Data/Big Data/COSMIC/v95/genome_wide/20220117_results/20220117.FrequencyByMutation.RDS")
+df_gw <- readRDS("/Users/deepankar/OneDrive - O365 Turun yliopisto/ExtraWorkSync/Klaus-Lab-Data/Big Data/COSMIC/v95/genome_wide/20220117_results/20220117.FrequencyByMutation.RDS")
 df_gw <- df_gw[,1:4]
 df_gw[, MutID:=paste0(Gene,"=",Mutation)]
 
-df_full <- readRDS("/Users/deepankar/mntpoint/UTU.iMac/OneDrive - O365 Turun yliopisto/ExtraWorkSync/Klaus-Lab-Data/Big Data/COSMIC/v95/targeted_and_wgs/20220606_results/20220606.FrequencyByMutation.RDS")
+df_full <- readRDS("/Users/deepankar/OneDrive - O365 Turun yliopisto/ExtraWorkSync/Klaus-Lab-Data/Big Data/COSMIC/v95/targeted_and_wgs/20220606_results/20220606.FrequencyByMutation.RDS")
 df_full <- df_full[,1:4]
 df_full[, MutID:=paste0(Gene,"=",Mutation)]
 
@@ -37,11 +37,11 @@ get_density <- function(x, y, ...) {
   # Description: Get density of points in 2 dimensions.
   # Source: https://slowkow.com/notes/ggplot2-color-by-density/
   # Author: Kamil Slowikowski
-  
+
   # @param x A numeric vector.
   # @param y A numeric vector.
   # @param n Create a square n by n grid to compute density.
-  
+
   # @return The density within each square.
   dens <- MASS::kde2d(x, y, ...)
   ix <- findInterval(x, dens$x)
@@ -64,11 +64,15 @@ selection[,density := get_density(x = gw, y = targ, n = N)]
 library(ggplot2)
 source('https://raw.githubusercontent.com/dchakro/ggplot_themes/master/DC_theme_generator.R')
 customtheme <- DC_theme_generator(type = "L",legend = F)
-ggplot(data = selection, aes(x=gw, y=targ, color=density))+
-  geom_point(alpha=0.7,aes(size=gw_count))+
-  xlab("Share in genome-wide screens (%)")+
-  ylab("Share in complete data (%)")+
-  scale_color_viridis_c(option = "plasma")+
+ggplot(data = selection, aes(x=gw, y=targ))+
+  geom_point(alpha=1, 
+             shape = 21,
+             stroke = 0.2,
+             color = "#000000",
+             fill = "#1280C3",
+             aes(size=gw_count))+
+  xlab("MAF in genome-wide screens (%)")+
+  ylab("MAF in complete data (%)")+
   geom_abline(slope = 1,intercept = 0)+
   scale_x_continuous(expand=c(0,0),limits = c(0,16))+
   scale_y_continuous(expand=c(0,0),limits = c(0,16))+
@@ -109,8 +113,8 @@ p <- plot_ly(
   add_markers(marker=list(opacity = 0.5, sizemode = 'diameter')) %>%
   layout(
     title = paste0("<b>Top ",N, " Mutations</b>"),
-    xaxis = list(title = paste0("<b>Share in genome-wide screens (%)</b>")),
-    yaxis = list(title = paste0("<b>Share in complete data (%)</b>"))
+    xaxis = list(title = paste0("<b>MAF in genome-wide screens (%)</b>")),
+    yaxis = list(title = paste0("<b>MAF in complete data (%)</b>"))
   )
 # hide_colorbar(p)
 htmlwidgets::saveWidget(
