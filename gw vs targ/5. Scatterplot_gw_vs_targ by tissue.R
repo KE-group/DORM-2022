@@ -187,21 +187,76 @@ ggplot(data = selection, aes(x=gw, y=full, fill=tissue))+
   geom_abline(slope = 1,intercept = 0, linetype="dotted")+
   geom_point(alpha = 1, 
              color = "#000000", 
+             stroke = 0.3,
              shape = 21,
              aes(size = gw_count))+
-  xlab("Share in genome-wide screens (%)")+
-  ylab("Share in complete data (%)")+
+  xlab("MAF in genome-wide screens (%)")+
+  ylab("MAF in complete data (%)")+
   scale_fill_manual(values = colors)+
   scale_x_continuous(expand = c(0,0), 
                      limits = c(0,100))+
   scale_y_continuous(expand = c(0,0), 
                      limits = c(0,100))+
   scale_size(range=c(1,10))+
+  coord_cartesian(clip = "off")+
   ggtitle(paste0("Most recurrent mutations (N: 1 - ",N, ")"))+
   customtheme
 
 ggsave(
   filename = paste0("gg_Scatter_tissue_top", N, ".pdf"),
+  height = 5,
+  width = 5
+)
+
+
+ggplot(data = selection, aes(x=gw, y=full, fill=tissue))+
+  # geom_smooth(method = "lm", aes(group=1),se = F,na.rm = T,color="#BE0000")+
+  geom_abline(slope = 1,intercept = 0, linetype="dotted")+
+  geom_point(alpha = 1, 
+             color = "#000000", 
+             stroke = 0.3,
+             shape = 21,
+             aes(size = gw_count))+
+  xlab("MAF in genome-wide screens (%)")+
+  ylab("MAF in complete data (%)")+
+  scale_fill_manual(values = colors)+
+  scale_x_continuous(expand = c(0,0), 
+                     limits = c(0,20))+
+  scale_y_continuous(expand = c(0,0), 
+                     limits = c(0,20))+
+  scale_size(range=c(1,10))+
+  coord_cartesian(clip = "off")+
+  ggtitle(paste0("Most recurrent mutations (N: 1 - ",N, ")"))+
+  customtheme
+
+ggsave(
+  filename = paste0("gg_Scatter_tissue_zoom_top", N, ".pdf"),
+  height = 5,
+  width = 5
+)
+
+ggplot(data = selection, aes(x=gw, y=full, fill=tissue))+
+  # geom_smooth(method = "lm", aes(group=1),se = F,na.rm = T,color="#BE0000")+
+  geom_abline(slope = 1,intercept = 0, linetype="dotted")+
+  geom_point(alpha = 1, 
+             color = "#000000", 
+             stroke = 0.3,
+             shape = 21,
+             aes(size = gw_count))+
+  xlab("MAF in genome-wide screens (%)")+
+  ylab("MAF in complete data (%)")+
+  scale_fill_manual(values = colors)+
+  scale_x_log10(expand = c(0,0), 
+                     limits = c(0.1,100))+
+  scale_y_log10(expand = c(0,0), 
+                     limits = c(0.1,100))+
+  scale_size(range=c(1,10))+
+  coord_cartesian(clip = "off")+
+  ggtitle(paste0("Most recurrent mutations (N: 1 - ",N, ")"))+
+  customtheme
+
+ggsave(
+  filename = paste0("gg_Scatter_tissue_log10_top", N, ".pdf"),
   height = 5,
   width = 5
 )
@@ -243,8 +298,8 @@ p <- plot_ly(
   add_markers(marker=list(opacity = 0.5, sizemode = 'diameter')) %>%
   layout(
     title = paste0("<b>Most recurrent mutations (N: 1 - ",N, ")</b>"),
-    xaxis = list(title = paste0("<b>Share in genome-wide screens (%)</b>")),
-    yaxis = list(title = paste0("<b>Share in combined screen data (%)</b>"))
+    xaxis = list(title = paste0("<b>MAF in genome-wide screens (%)</b>")),
+    yaxis = list(title = paste0("<b>MAF in combined screen data (%)</b>"))
   )
 
 # p %>% add_trace(x = ~full, y = fitted(lm(selection$gw~selection$full), mode = "lines"))
