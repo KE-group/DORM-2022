@@ -50,7 +50,7 @@ findCount_gw <- function(mutationID = NULL,
 }
 
 # Reading data
-df_gw <- readRDS("/Users/deepankar/OneDrive - O365 Turun yliopisto/ExtraWorkSync/Klaus-Lab-Data/Big Data/COSMIC/v95/Full_Database/20220117.FrequencyByMutation.RDS")
+df_gw <- readRDS("/Users/deepankar/OneDrive - O365 Turun yliopisto/ExtraWorkSync/Klaus-Lab-Data/Big Data/COSMIC/v95/genome_wide/20220117_results/20220117.FrequencyByMutation.RDS")
 df_gw[,Mutation := gsub("_", "-", Mutation)]
 
 # nCT= sample Count By Cancer Type
@@ -67,7 +67,7 @@ df_gw <- setDT(df_gw)
 df_gw[, MutID:=paste0(Gene,"=",Mutation)]
 nCT_gw <- nCT
 
-df_full <- readRDS("/Users/deepankar/OneDrive - O365 Turun yliopisto/ExtraWorkSync/Klaus-Lab-Data/Big Data/COSMIC/v95/targeted_and_wgs/20220606.FrequencyByMutation.RDS")
+df_full <- readRDS("/Users/deepankar/OneDrive - O365 Turun yliopisto/ExtraWorkSync/Klaus-Lab-Data/Big Data/COSMIC/v95/targeted_and_wgs/20220606_results/20220606.FrequencyByMutation.RDS")
 df_full[,Mutation := gsub("_", "-", Mutation)]
 # nCT= sample Count By Cancer Type
 nCT <- readRDS("/Users/deepankar/OneDrive - O365 Turun yliopisto/Klaus lab/Manuscripts/DORM database/Data/COSMIC_v95_targ_and_gw/sampleCountByCancerType.RDS")
@@ -102,7 +102,7 @@ names(colors) <- colors_data$tissue
 
 # ---------
 # Generating data for Plotting
-N=1000
+N=5000
 selection <- data.frame(MutID = df_gw$MutID[1:N])
 long_gw <- melt(df_gw[1:N, ], id.vars = c("MutID", "Gene", "Mutation"))
 long_full <-
@@ -168,12 +168,12 @@ selection$Gene <- unlist(lapply(strsplit(selection$Mutant," "), `[[`, 1))
 
 # paste0(formatC(signif(selection$gw,digits=3), digits=3,format="fg")," %")
 
-source("/Users/deepankar/OneDrive - O365 Turun yliopisto/Git/Gitlab.DC/Utilities/SignedFoldChange.R")
-selection[,size:=FoldChange(gw_count,full_count)]
-summary(selection$size)
-selection$size[selection$size == Inf] <- 0
-selection$size[is.na(selection$size)] <- 0
-summary(selection$size)
+# source("/Users/deepankar/OneDrive - O365 Turun yliopisto/Git/Gitlab.DC/Utilities/SignedFoldChange.R")
+# selection[,size:=FoldChange(gw_count,full_count)]
+# summary(selection$size)
+# selection$size[selection$size == Inf] <- 0
+# selection$size[is.na(selection$size)] <- 0
+# summary(selection$size)
 
 # levels(as.factor(selection$tissue))
 
@@ -182,15 +182,20 @@ summary(selection$size)
 library(ggplot2)
 source('https://raw.githubusercontent.com/dchakro/ggplot_themes/master/DC_theme_generator.R')
 customtheme <- DC_theme_generator(type = "L",legend = F)
-ggplot(data = selection, aes(x=gw, y=full, color=tissue))+
+ggplot(data = selection, aes(x=gw, y=full, fill=tissue))+
   # geom_smooth(method = "lm", aes(group=1),se = F,na.rm = T,color="#BE0000")+
   geom_abline(slope = 1,intercept = 0, linetype="dotted")+
-  geom_point(alpha=0.7,aes(size=size))+
+  geom_point(alpha = 1, 
+             color = "#000000", 
+             shape = 21,
+             aes(size = gw_count))+
   xlab("Share in genome-wide screens (%)")+
   ylab("Share in complete data (%)")+
-  scale_color_manual(values=colors)+
-  scale_x_continuous(expand=c(0,0),limits = c(0,100))+
-  scale_y_continuous(expand=c(0,0),limits = c(0,100))+
+  scale_fill_manual(values = colors)+
+  scale_x_continuous(expand = c(0,0), 
+                     limits = c(0,100))+
+  scale_y_continuous(expand = c(0,0), 
+                     limits = c(0,100))+
   scale_size(range=c(1,10))+
   ggtitle(paste0("Most recurrent mutations (N: 1 - ",N, ")"))+
   customtheme
@@ -207,7 +212,7 @@ lr <- lm(gw ~ full, selection)
 library(plotly)
 p <- plot_ly(
   data=selection,
-  size = ~size,
+  size = ~gw_count,
   sizes = c(8, 40),
   x =  ~ gw,
   y =  ~ full,
