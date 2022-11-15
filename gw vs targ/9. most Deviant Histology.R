@@ -63,7 +63,7 @@ source("/Users/deepankar/OneDrive - O365 Turun yliopisto/Git/Gitlab.DC/Utilities
 myDT[is.na(myDT$gw_percentage), gw_percentage := 0]
 myDT[, FC := FoldChange(gw_percentage, full_percentage)]
 myDT[, DIFF := full_percentage-gw_percentage]
-
+myDT[is.na(myDT$gw_mutant_N), gw_mutant_N := 0]
 
 library(ggplot2)
 source('https://raw.githubusercontent.com/dchakro/ggplot_themes/master/DC_theme_generator.R')
@@ -79,13 +79,13 @@ main_plot <- ggplot(myDT,
        )) +
   geom_point() +
   xlab("Fold change (+/-)\n(Full vs Genome-wide)")+
-  ylab("Difference in Population Freq (%)\n(Full - Genome-wide)")+
+  ylab("Difference in MAF (%)\n(Full - Genome-wide)")+
   geom_vline(xintercept = 0) +
   geom_hline(yintercept = 0) +
   scale_color_viridis_d(option = "turbo","Primary-Site") +
   scale_alpha("N (gw) / opacity",range = c(0.15, 0.8))+
-  scale_size(range=c(1,8),trans = "log10")+
-  coord_cartesian(clip = "off")
+  scale_size("N (full) / size", range=c(1,8),trans = "log10")+
+  coord_flip(clip = "off")
 
 library(patchwork)
 scatterPlot=main_plot+customtheme
@@ -106,4 +106,169 @@ ggsave(
   units = "cm"
 )
 
+#------------
+# 
+main_plot <- ggplot(myDT,
+                    aes(
+                      x = gw_mutant_N,
+                      y = DIFF,
+                      fill = tissue,
+                      size = gw_N)) +
+  geom_point(shape=21, 
+             color="#000000", 
+             stroke = 0.2,
+             alpha = 1) +
+  xlab("Number samples with mutation")+
+  ylab("Difference in MAF (%)\n(Full - Genome-wide)")+
+  geom_hline(yintercept = 0) +
+  scale_fill_viridis_d(option = "turbo","Primary-Site") +
+  scale_x_continuous(breaks = seq(0,1000, by  = 100), expand = c(0,0))+
+  scale_size("Scale of study (N)", range=c(1,10))+
+  coord_flip(clip = "off")
+
+library(patchwork)
+scatterPlot=main_plot+customtheme
+legend=ggpubr::as_ggplot(ggpubr::get_legend(main_plot))
+
+export <-  scatterPlot + 
+  legend + 
+  plot_layout(nrow = 1, ncol=2,
+              widths =  unit(c(12, 1), c('cm', 'null')),
+              heights = unit(c(12, 1), c('cm', 'null')))
+
+ggsave(
+  plot = export,
+  filename = "../mostDeviantHistologies2.pdf",
+  device = cairo_pdf,
+  width = 24,
+  height = 24,
+  units = "cm"
+)
+
+#-------------
+main_plot <- ggplot(myDT,
+                    aes(
+                      x = gw_N,
+                      y = DIFF,
+                      fill = tissue,
+                      size = gw_mutant_N)) +
+  geom_point(shape=21, 
+             color="#000000", 
+             stroke = 0.2,
+             alpha = 1) +
+  xlab("Total number of samples analyzed")+
+  ylab("Difference in MAF (%)\n(Full - Genome-wide)")+
+  geom_hline(yintercept = 0) +
+  scale_fill_viridis_d(option = "turbo","Primary-Site") +
+  scale_size("Number of mutants", range=c(1,8))+
+  scale_x_continuous(breaks = seq(0,3000, by  = 500), expand = c(0,0))+
+  coord_flip(clip = "off")
+
+library(patchwork)
+scatterPlot=main_plot+customtheme
+legend=ggpubr::as_ggplot(ggpubr::get_legend(main_plot))
+
+export <-  scatterPlot + 
+  legend + 
+  plot_layout(nrow = 1, ncol=2,
+              widths =  unit(c(12, 1), c('cm', 'null')),
+              heights = unit(c(12, 1), c('cm', 'null')))
+
+ggsave(
+  plot = export,
+  filename = "../mostDeviantHistologies3.pdf",
+  device = cairo_pdf,
+  width = 24,
+  height = 24,
+  units = "cm"
+)
+
+#-----------
+main_plot <- ggplot(myDT,
+                    aes(
+                      x = gw_mutant_N,
+                      y = FC,
+                      fill = tissue,
+                      size = gw_N)) +
+  geom_point(shape=21, 
+             color="#000000", 
+             stroke = 0.2,
+             alpha = 1) +
+  xlab("Number samples with mutation")+
+  ylab("Fold change (+/-)\n(Full vs Genome-wide)")+
+  geom_hline(yintercept = 0) +
+  scale_fill_viridis_d(option = "turbo","Primary-Site") +
+  scale_x_continuous(breaks = seq(0,1000, by  = 100), expand = c(0,0))+
+  scale_size("Scale of study (N)", range=c(1,10))+
+  coord_flip(clip = "off")
+
+library(patchwork)
+scatterPlot=main_plot+customtheme
+legend=ggpubr::as_ggplot(ggpubr::get_legend(main_plot))
+
+export <-  scatterPlot + 
+  legend + 
+  plot_layout(nrow = 1, ncol=2,
+              widths =  unit(c(12, 1), c('cm', 'null')),
+              heights = unit(c(12, 1), c('cm', 'null')))
+
+ggsave(
+  plot = export,
+  filename = "../mostDeviantHistologies4.pdf",
+  device = cairo_pdf,
+  width = 24,
+  height = 24,
+  units = "cm"
+)
+
+#-------------
+main_plot <- ggplot(myDT,
+                    aes(
+                      x = gw_N,
+                      y = FC,
+                      fill = tissue,
+                      size = gw_mutant_N)) +
+  geom_point(shape=21, 
+             color="#000000", 
+             stroke = 0.2,
+             alpha = 1) +
+  xlab("Total number of samples analyzed")+
+  ylab("Fold change (+/-)\n(Full vs Genome-wide)")+
+  geom_hline(yintercept = 0) +
+  scale_fill_viridis_d(option = "turbo","Primary-Site") +
+  scale_x_continuous(breaks = seq(0,3000, by  = 500), expand = c(0,0))+
+  scale_size("Number of mutants", range=c(1,8))+
+  coord_flip(clip = "off")
+
+library(patchwork)
+scatterPlot=main_plot+customtheme
+legend=ggpubr::as_ggplot(ggpubr::get_legend(main_plot))
+
+export <-  scatterPlot + 
+  legend + 
+  plot_layout(nrow = 1, ncol=2,
+              widths =  unit(c(12, 1), c('cm', 'null')),
+              heights = unit(c(12, 1), c('cm', 'null')))
+
+ggsave(
+  plot = export,
+  filename = "../mostDeviantHistologies5.pdf",
+  device = cairo_pdf,
+  width = 24,
+  height = 24,
+  units = "cm"
+)
+
+# Writing data
+write.table(
+  x = myDT,
+  "../mostDeviantHistologies.tsv",
+  sep = "\t",
+  row.names = F,
+  col.names = ,
+  quote = F
+)
+
+
 # plotDT <- myDT[(FC >=5 & FC < Inf)|(FC <= -5 & FC > -Inf),]
+
