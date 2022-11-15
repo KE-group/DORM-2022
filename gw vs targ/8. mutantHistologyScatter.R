@@ -82,8 +82,8 @@ saveScatterplots <- function(fileName){
   #   geom_point()+
   #   scale_x_continuous(expand = c(0,0), limits = c(0,ax_limit))+
   #   scale_y_continuous(expand = c(0,0), limits = c(0,ax_limit))+
-  #   xlab("Share in genome-wide screens (%)")+
-  #   ylab("Share in complete data (%)")+
+  #   xlab("MAF in genome-wide screens (%)")+
+  #   ylab("MAF in complete data (%)")+
   #   scale_colour_viridis_d(option = "plasma")+
   #   customtheme
   
@@ -96,8 +96,8 @@ saveScatterplots <- function(fileName){
 #     geom_point()+
 #     scale_x_continuous(expand = c(0,0), limits = c(0,ax_limit))+
 #     scale_y_continuous(expand = c(0,0), limits = c(0,ax_limit))+
-#     xlab("Share in genome-wide screens (%)")+
-#     ylab("Share in complete data (%)")+
+#     xlab("MAF in genome-wide screens (%)")+
+#     ylab("MAF in complete data (%)")+
 # #    scale_colour_viridis_c(option = "turbo")+
 #     scale_colour_viridis_c(option = "plasma","N (full)")+
 #     scale_shape(solid = TRUE, "Histology")+
@@ -105,22 +105,25 @@ saveScatterplots <- function(fileName){
 #     customtheme
   
   myDT[is.na(myDT)]=0
-  main_plot <- ggplot(data <- myDT,aes(x=gw_percentage,
-                          y=full_percentage,
-                          size=full_mutant_N,
-                          alpha=gw_mutant_N,
-                          color=reorder(Histology,-full_mutant_N)))+
+  main_plot <- ggplot(data <- myDT,aes(x = gw_percentage,
+                          y = full_percentage,
+                          size = gw_mutant_N,
+                          fill = reorder(Histology,-full_mutant_N)))+
     geom_abline(slope = 1,intercept = 0, linetype="dotted")+
-    geom_point()+
-    scale_x_continuous(expand = c(0,0), limits = c(0,ax_limit))+
-    scale_y_continuous(expand = c(0,0), limits = c(0,ax_limit))+
-    xlab("Share in genome-wide screens (%)")+
-    ylab("Share in complete data (%)")+
+    geom_point(alpha = 1, 
+               shape = 21, 
+               color = "#000000", 
+               stroke = 0.5)+
+    scale_x_continuous(expand = c(0,0), 
+                       limits = c(0,ax_limit))+
+    scale_y_continuous(expand = c(0,0), 
+                       limits = c(0,ax_limit))+
+    xlab("MAF in genome-wide screens (%)")+
+    ylab("MAF in complete data (%)")+
     ggtitle(gsub("_"," ", paste0(mutID," in ", tissue)))+
     # scale_color_brewer(palette = color_palette,"Histology")+
-    scale_colour_viridis_d(option = "turbo", "Histology", direction = -1)+
-    scale_size("N (full) / size")+
-    scale_alpha("N (gw) / opacity",range = c(0.3, 1))+
+    scale_fill_viridis_d(option = "turbo", "Histology", direction = -1)+
+    scale_size("N (gw) / size")+
     coord_cartesian(clip = 'off') # this turns off clipping points on x & y axis
   
   scatterPlot=main_plot+customtheme
