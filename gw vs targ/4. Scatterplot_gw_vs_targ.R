@@ -46,7 +46,7 @@ ggplot(data = selection, aes(x=gw, y=targ))+
              fill = "#1280C3",
              aes(size=gw_count))+
   xlab("MAF % (genome-wide sequencing)")+
-  ylab("MAF % (in targeted Sequencing)")+
+  ylab("MAF % (in targeted sequencing)")+
   geom_abline(slope = 1,intercept = 0)+
   scale_x_continuous(expand=c(0,0),limits = c(0,16))+
   scale_y_continuous(expand=c(0,0),limits = c(0,16))+
