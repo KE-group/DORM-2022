@@ -21,43 +21,17 @@ selection$full <- df_full$counts[match(x = selection$MutID, table = df_full$MutI
 selection <- setDT(selection)
 
 # # Removing genome-wide data from full and renaming to targeted seq
-# selection$full <- selection$full-ifelse(is.na(selection$gw),0,selection$gw) # creates problems with mutations like (ZNF814 A337V)
+selection[,targ := full - gw]
 
-setnames(selection,"full","targ_count")
+setnames(selection,"targ","targ_count")
+setnames(selection,"full","full_count")
 setnames(selection,"gw","gw_count")
 
 # Converting to % of samples
+# GW 36224; FULL 328017 ; TARG 364241
 selection[, gw := ((gw_count / 36224) * 100)]
-# Full count = 364241
-# selection[, targ := ((targ_count / 328017) * 100)]
-selection[, targ := ((targ_count / 364241) * 100)]
-
-library(MASS)
-get_density <- function(x, y, ...) {
-  # Description: Get density of points in 2 dimensions.
-  # Source: https://slowkow.com/notes/ggplot2-color-by-density/
-  # Author: Kamil Slowikowski
-
-  # @param x A numeric vector.
-  # @param y A numeric vector.
-  # @param n Create a square n by n grid to compute density.
-
-  # @return The density within each square.
-  dens <- MASS::kde2d(x, y, ...)
-  ix <- findInterval(x, dens$x)
-  iy <- findInterval(y, dens$y)
-  ii <- cbind(ix, iy)
-  return(dens$z[ii])
-}
-
-selection[,density := get_density(x = gw, y = targ, n = N)]
-
-# source("/Users/deepankar/OneDrive - O365 Turun yliopisto/Git/Gitlab.DC/Utilities/SignedFoldChange.R")
-# selection[,size:=FoldChange(gw_count,targ_count)]
-# summary(selection$size)
-# selection$size[selection$size == Inf] <- 0
-# selection$size[is.na(selection$size)] <- 0
-# summary(selection$size)
+selection[, targ := ((targ_count / 328017) * 100)]
+selection[, full := ((full_count / 364241) * 100)]
 
 #-----------
 #  Plotting
@@ -71,14 +45,15 @@ ggplot(data = selection, aes(x=gw, y=targ))+
              color = "#000000",
              fill = "#1280C3",
              aes(size=gw_count))+
-  xlab("MAF in genome-wide screens (%)")+
-  ylab("MAF in complete data (%)")+
+  xlab("MAF % (genome-wide sequencing)")+
+  ylab("MAF % (in targeted Sequencing)")+
   geom_abline(slope = 1,intercept = 0)+
   scale_x_continuous(expand=c(0,0),limits = c(0,16))+
   scale_y_continuous(expand=c(0,0),limits = c(0,16))+
   scale_size(range=c(1,10))+
   ggtitle(paste0("Top ",N, " Mutations"))+
-  customtheme
+  customtheme+
+  coord_cartesian(clip = "on")
 
 ggsave(
   filename = paste0("gg_Scatter_top", N, ".pdf"),
@@ -94,8 +69,7 @@ p <- plot_ly(
   y =  ~ targ,
   size = ~gw_count,
   sizes = c(8, 50),
-  color = ~density,
-  colors = "plasma",
+  colors = "#1280C3",
   mode = "text",
   text =  ~ paste("Cell Line: ", gsub("="," ", MutID),
                   "\nCount (T) = ", targ_count,
